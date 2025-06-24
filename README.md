@@ -1,2 +1,2 @@
-# Simple-ChatbotAI
-chatbot AI database vue mongoDB
+# CinemAI
+Find or discover your movies
