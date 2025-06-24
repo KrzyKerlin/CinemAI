@@ -1,3 +1,7 @@
+/* Color Scheme:
+    Dark backgrounds: #0f0f23, #1a1a2e, #16213e
+    Accent colors: #ff6b6b, #4ecdc4, #45b7d1, #96ceb4
+*/
 * {
     margin: 0;
     padding: 0;
@@ -27,10 +31,49 @@ body {
 .header h1 {
     font-size: 3.5rem;
     font-weight: 700;
-    color: #4ecdc4;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 4s ease-in-out infinite;
     margin-bottom: 10px;
-    text-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+    position: relative;
 }
+
+@keyframes gradientShift {
+    0%, 100% { 
+        background-position: 0% 50%; 
+        }
+    50% { 
+        background-position: 100% 50%; 
+    }
+}
+
+.header h1::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(78, 205, 196, 0.1) 0%, rgba(255, 107, 107, 0.1) 50%, transparent 70%);
+    border-radius: 50%;
+    z-index: -1;
+    animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 0.8;
+    }
+ }
 
 .subtitle {
     font-size: 1.2rem;
@@ -40,6 +83,19 @@ body {
     margin-left: auto;
     margin-right: auto;
     line-height: 1.6;
+    opacity: 0;
+    animation: fadeInUp 1s ease-out 0.5s forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Glass morphism effect base */
@@ -60,5 +116,15 @@ body {
     .subtitle {
         font-size: 1rem;
         padding: 0 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 2rem;
+    }
+            
+    .container {
+        padding: 15px;
     }
 }
