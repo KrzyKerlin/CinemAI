@@ -16,7 +16,12 @@
             <div class="search-container">
                 <input type="text" class="search-input" id="searchInput" placeholder="Wyszukaj filmy... lub opisz co chcesz obejrzeć">
             </div>
-                        <div class="filters">
+            <div class="ai-search-container">
+                <button class="ai-search-btn" id="aiSearchBtn">
+                    Wyszukiwanie
+                </button>
+            </div>
+            <div class="filters">
                 <button class="filter-btn active" data-genre="all">Wszystkie</button>
                 <button class="filter-btn" data-genre="28">Akcja</button>
                 <button class="filter-btn" data-genre="35">Komedia</button>
@@ -25,8 +30,18 @@
                 <button class="filter-btn" data-genre="878">Sci-Fi</button>
                 <button class="filter-btn" data-genre="10749">Romans</button>
                 <button class="filter-btn" data-genre="53">Thriller</button>
+                <button class="filter-btn" data-genre="99">Dokumentalny</button>
+                <button class="filter-btn" data-genre="16">Animacja</button>
+                <button class="filter-btn" data-genre="10402">Muzyczny</button>
+            </div>
+        </div>
+        <div id="moviesContainer" id="aiSearchBtn">
+            <div class="loading">
+                <div class="spinner"></div>
+                Ładowanie rekomendowanych filmów...
             </div>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>

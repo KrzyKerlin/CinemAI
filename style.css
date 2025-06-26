@@ -156,6 +156,34 @@ body {
     color: #a0a0a0;
 }
 
+ .ai-search-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+.ai-search-btn {
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+    border: none;
+    padding: 15px 30px;
+    border-radius: 50px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.ai-search-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.ai-search-btn:active {
+    transform: translateY(-1px);
+}
+
 .filters {
     display: flex;
     gap: 15px;
