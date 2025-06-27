@@ -68,7 +68,7 @@ class MovieRecommendationSystem {
                     <img class="movie-poster" src="${posterUrl}" alt="${movie.title}" loading="lazy">
                 </div>
             `;
-        })
+        }).join('');
 
         container.innerHTML = `<div class="movies-grid">${moviesHtml}</div>`;
     }
