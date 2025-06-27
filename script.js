@@ -37,11 +37,58 @@ class MovieRecommendationSystem {
             );
             const data = await response.json();
             this.allMovies = data.results;
-            console.log('Filmy załadowane:', data.results.length);
+            this.displayMovies(data.results);
         } catch (error) {
             console.error('Błąd podczas ładowania filmów:', error);
             this.showError();
         }
+    }
+
+    displayMovies(movies) {
+        const container = document.getElementById('moviesContainer');
+    
+        if (movies.length === 0) {
+            this.showNoResults();
+            return;
+        }
+
+        const moviesHtml = movies.map(movie => {
+            const posterUrl = movie.poster_path 
+                ? `${this.imageBaseUrl}${movie.poster_path}`
+                : 'https://via.placeholder.com/500x750?text=Brak+plakatu';
+        
+            const releaseYear = movie.release_date 
+                ? new Date(movie.release_date).getFullYear()
+                : 'Nieznany';
+        
+            const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+        
+            return `
+                <div class="movie-card">
+                    <img class="movie-poster" src="${posterUrl}" alt="${movie.title}" loading="lazy">
+                </div>
+            `;
+        })
+
+        container.innerHTML = `<div class="movies-grid">${moviesHtml}</div>`;
+    }
+
+    showNoResults() {
+        document.getElementById('moviesContainer').innerHTML = `
+            <div class="no-results">
+                <h3>Brak wyników</h3>
+                <p>Spróbuj zmienić kryteria wyszukiwania lub wybierz inny gatunek.</p>
+            </div>
+        `;  
+    }
+
+    showError() {
+        document.getElementById('moviesContainer').innerHTML = `
+            <div class="no-results">
+                <h3>Wystąpił błąd</h3>
+                <p>Nie udało się załadować filmów. Spróbuj ponownie później.</p>
+            </div>
+        `;
     }
 
     showLoading() {
