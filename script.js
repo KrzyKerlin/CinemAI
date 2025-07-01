@@ -62,15 +62,34 @@ class MovieRecommendationSystem {
                 : 'Nieznany';
         
             const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+            const stars = this.generateStars(movie.vote_average);
         
             return `
                 <div class="movie-card">
                     <img class="movie-poster" src="${posterUrl}" alt="${movie.title}" loading="lazy">
+                    <div class="movie-info">
+                        <h3 class="movie-title">${movie.title}</h3>
+                        <p class="movie-year">${releaseYear}</p>
+                        <div class="movie-rating">
+                            ${stars}
+                            <span>${rating}/10</span>
+                        </div>
+                        <p class="movie-overview">${movie.overview || 'Brak opisu dostępnego.'}</p>
+                    </div>
                 </div>
             `;
         }).join('');
 
         container.innerHTML = `<div class="movies-grid">${moviesHtml}</div>`;
+    }
+
+    generateStars(rating) {
+                const stars = Math.round(rating / 2);
+                let starsHtml = '';
+                for (let i = 0; i < 5; i++) {
+                    starsHtml += `<span class="star">${i < stars ? '★' : '☆'}</span>`;
+                }
+                return starsHtml;
     }
 
     showNoResults() {

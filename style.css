@@ -246,6 +246,46 @@ body {
     transform: scale(1.05);
 }
 
+.movie-info {
+    padding: var(--spacing-lg);
+}
+
+:is(.movie-title, .movie-year, .movie-rating, .movie-overview) {
+    margin-bottom: var(--spacing-sm);
+}
+
+.movie-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.movie-year {
+    color: var(--text-accent);
+    font-size: var(--font-size-base);
+}
+
+.movie-rating {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.star {
+    color: var(--star-color);
+    font-size: var(--font-size-lg);
+}
+
+.movie-overview {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 /* Responsive Design */
 @media (min-width: 480px) {
     .filter-btn {
