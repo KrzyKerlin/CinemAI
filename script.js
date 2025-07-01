@@ -25,7 +25,8 @@ class MovieRecommendationSystem {
             btn.addEventListener('click', (e) => {
                 filterButtons.forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
-                console.log('Filter clicked:', e.target.dataset.genre);
+                this.currentGenre = e.target.dataset.genre;
+                this.loadMoviesByGenre(this.currentGenre);
             });
         });
     }
@@ -35,6 +36,26 @@ class MovieRecommendationSystem {
             const response = await fetch(
                 `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=1`
             );
+            const data = await response.json();
+            this.allMovies = data.results;
+            this.displayMovies(data.results);
+        } catch (error) {
+            console.error('Błąd podczas ładowania filmów:', error);
+            this.showError();
+        }
+    }
+
+    async loadMoviesByGenre(genreId) {
+        this.showLoading();
+        try {
+            let url;
+            if (genreId === 'all') {
+                url = `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=1`;
+            } else {
+                url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=pl-PL&with_genres=${genreId}&sort_by=popularity.desc&page=1`;
+            }
+        
+            const response = await fetch(url);
             const data = await response.json();
             this.allMovies = data.results;
             this.displayMovies(data.results);
