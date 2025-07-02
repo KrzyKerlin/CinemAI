@@ -31,7 +31,7 @@
     --spacing-2xl: 40px;
             
     /* Border Radius */
-    --radius-sm: 15px;
+    --radius-sm: 10px;
     --radius-md: 20px;
     --radius-lg: 25px;
     --radius-xl: 50px;
@@ -126,7 +126,7 @@ body {
 .glass-card {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: var(--blur);
-    border-radius: 20px;
+    border-radius: var(--radius-md);
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
@@ -222,7 +222,7 @@ body {
 .movie-card {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: var (--blur);
-    border-radius: 20px;
+    border-radius: var(--radius-md);
     overflow: hidden;
     transition: all 0.4s ease;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -314,6 +314,48 @@ body {
 .no-results {
     color: var(--text-secondary);
     font-size: var(--font-size-lg);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 40px 0;
+    flex-wrap: wrap;
+}
+
+.pagination button {
+    padding: 10px 15px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-sm);
+    background: var(--glass-border-hover);
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: var(--font-size-base);
+}
+
+.pagination button:hover:not(:disabled) {
+    background: var(--gradient-button);
+    border-color: transparent;
+    transform: translateY(-2px);
+}
+
+.pagination button.active {
+    background: var(--gradient-button);
+    border-color: transparent;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-info {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    margin: 0 15px;
 }
 
 /* Responsive Design */

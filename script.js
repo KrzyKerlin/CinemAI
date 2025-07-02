@@ -4,6 +4,11 @@ class MovieRecommendationSystem {
         this.baseUrl = 'https://api.themoviedb.org/3';
         this.imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
         this.allMovies = [];
+        this.currentGenre = 'all';
+        this.currentPage = 1;
+        this.totalPages = 1;
+        this.currentSearchType = 'popular'; 
+        this.currentQuery = '';
         this.init();
     }
 
@@ -16,11 +21,14 @@ class MovieRecommendationSystem {
         const searchInput = document.getElementById('searchInput');
         const aiSearchBtn = document.getElementById('aiSearchBtn');
         const filterButtons = document.querySelectorAll('.filter-btn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
 
         let searchTimeout;
         searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
+                this.currentPage = 1;
                 if (e.target.value.trim()) {
                     this.searchMovies(e.target.value);
                 } else {
@@ -41,27 +49,58 @@ class MovieRecommendationSystem {
             btn.addEventListener('click', (e) => {
                 filterButtons.forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
+                this.currentPage = 1;
                 this.currentGenre = e.target.dataset.genre;
                 this.loadMoviesByGenre(this.currentGenre);
             });
         });
+
+        prevBtn.addEventListener('click', () => {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+                this.loadCurrentSearch();
+                }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (this.currentPage < this.totalPages) {
+                this.currentPage++;
+                this.loadCurrentSearch();
+            }
+        });
     }
 
-    async loadPopularMovies() {
+    async loadCurrentSearch() {
+        switch (this.currentSearchType) {
+            case 'search':
+                await this.searchMovies(this.currentQuery, this.currentPage);
+                break;
+            case 'genre':
+                await this.loadMoviesByGenre(this.currentGenre, this.currentPage);
+                break;
+            default:
+                await this.loadPopularMovies(this.currentPage);
+        }
+    }
+
+    async loadPopularMovies(page = 1) {
+        this.currentSearchType = 'popular';
         try {
             const response = await fetch(
-                `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=1`
+                `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=${page}`
             );
             const data = await response.json();
+            this.totalPages = Math.min(data.total_pages, 100);
             this.allMovies = data.results;
             this.displayMovies(data.results);
+            this.updatePagination();
         } catch (error) {
             console.error('Błąd podczas ładowania filmów:', error);
             this.showError();
         }
     }
 
-    async loadMoviesByGenre(genreId) {
+    async loadMoviesByGenre(genreId, page = 1) {
         this.showLoading();
         try {
             let url;
@@ -73,8 +112,10 @@ class MovieRecommendationSystem {
         
             const response = await fetch(url);
             const data = await response.json();
+            this.totalPages = Math.min(data.total_pages, 100);
             this.allMovies = data.results;
             this.displayMovies(data.results);
+            this.updatePagination();
         } catch (error) {
             console.error('Błąd podczas ładowania filmów:', error);
             this.showError();
@@ -93,8 +134,9 @@ class MovieRecommendationSystem {
                 this.showNoResults();
                 return;
             }
-                    
+            this.totalPages = Math.min(data.total_pages, 100);
             this.displayMovies(data.results);
+            this.updatePagination();
         } catch (error) {
             console.error('Błąd podczas wyszukiwania:', error);
             this.showError();
@@ -174,6 +216,22 @@ class MovieRecommendationSystem {
                 Ładowanie rekomendowanych filmów...
             </div>
         `;
+    }
+
+    updatePagination() {
+        const pagination = document.getElementById('pagination');
+        const pageInfo = document.getElementById('pageInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+                
+        if (this.totalPages <= 1) {
+            pagination.style.display = 'none';
+            return;
+        }
+                
+        pageInfo.textContent = `Strona ${this.currentPage} z ${this.totalPages}`;
+        prevBtn.disabled = this.currentPage === 1;
+        nextBtn.disabled = this.currentPage === this.totalPages;
     }
 }
 
