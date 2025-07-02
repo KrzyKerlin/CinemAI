@@ -17,8 +17,24 @@ class MovieRecommendationSystem {
         const aiSearchBtn = document.getElementById('aiSearchBtn');
         const filterButtons = document.querySelectorAll('.filter-btn');
 
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (e.target.value.trim()) {
+                    this.searchMovies(e.target.value);
+                } else {
+                    this.loadMoviesByGenre(this.currentGenre);
+                }
+            }, 500);
+        });
+
         aiSearchBtn.addEventListener('click', () => {
-            console.log('AI Search clicked');
+            const query = searchInput.value.trim();
+            if (query) {
+                searchInput.placeholder = "Opisz jaki film chcesz obejrzeć...";
+                searchInput.focus();
+            }
         });
 
         filterButtons.forEach(btn => {
@@ -65,6 +81,26 @@ class MovieRecommendationSystem {
         }
     }
 
+    async searchMovies(query) {
+        this.showLoading();
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/search/movie?api_key=${this.apiKey}&language=pl-PL&query=${encodeURIComponent(query)}&page=1`
+            );
+            const data = await response.json();
+                    
+            if (data.results.length === 0) {
+                this.showNoResults();
+                return;
+            }
+                    
+            this.displayMovies(data.results);
+        } catch (error) {
+            console.error('Błąd podczas wyszukiwania:', error);
+            this.showError();
+        }
+    }
+
     displayMovies(movies) {
         const container = document.getElementById('moviesContainer');
     
@@ -105,12 +141,12 @@ class MovieRecommendationSystem {
     }
 
     generateStars(rating) {
-                const stars = Math.round(rating / 2);
-                let starsHtml = '';
-                for (let i = 0; i < 5; i++) {
-                    starsHtml += `<span class="star">${i < stars ? '★' : '☆'}</span>`;
-                }
-                return starsHtml;
+        const stars = Math.round(rating / 2);
+        let starsHtml = '';
+        for (let i = 0; i < 5; i++) {
+            starsHtml += `<span class="star">${i < stars ? '★' : '☆'}</span>`;
+        }
+        return starsHtml;
     }
 
     showNoResults() {
