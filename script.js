@@ -39,6 +39,7 @@ class MovieRecommendationSystem {
                 } else {
                     this.isSearchMode = false;
                     this.currentQuery = '';
+                    this.loadMoviesByGenre(this.currentGenre);
                 }
             }, 500);
         });
