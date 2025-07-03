@@ -9,6 +9,7 @@ class MovieRecommendationSystem {
         this.totalPages = 1;
         this.currentSearchType = 'popular'; 
         this.currentQuery = '';
+        this.isSearchMode = false;
         this.init();
     }
 
@@ -29,10 +30,15 @@ class MovieRecommendationSystem {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 this.currentPage = 1;
-                if (e.target.value.trim()) {
-                    this.searchMovies(e.target.value);
+                const query = e.target.value.trim();
+
+                if (query) {
+                    this.isSearchMode = true;
+                    this.currentQuery = query;
+                    this.searchMoviesByGenre(query, this.currentGenre);
                 } else {
-                    this.loadMoviesByGenre(this.currentGenre);
+                    this.isSearchMode = false;
+                    this.currentQuery = '';
                 }
             }, 500);
         });
@@ -51,7 +57,11 @@ class MovieRecommendationSystem {
                 e.target.classList.add('active');
                 this.currentPage = 1;
                 this.currentGenre = e.target.dataset.genre;
+                if (this.isSearchMode && this.currentQuery) {
+                    this.searchMoviesByGenre(this.currentQuery, this.currentGenre);
+                } else {
                 this.loadMoviesByGenre(this.currentGenre);
+                }
             });
         });
 
@@ -74,6 +84,9 @@ class MovieRecommendationSystem {
         switch (this.currentSearchType) {
             case 'search':
                 await this.searchMovies(this.currentQuery, this.currentPage);
+                break;
+            case 'searchGenre': 
+                await this.searchMoviesByGenre(this.currentQuery, this.currentGenre, this.currentPage);
                 break;
             case 'genre':
                 await this.loadMoviesByGenre(this.currentGenre, this.currentPage);
@@ -101,13 +114,14 @@ class MovieRecommendationSystem {
     }
 
     async loadMoviesByGenre(genreId, page = 1) {
+        this.currentSearchType = 'genre'; 
         this.showLoading();
         try {
             let url;
             if (genreId === 'all') {
-                url = `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=1`;
+                url = `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=${page}`;
             } else {
-                url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=pl-PL&with_genres=${genreId}&sort_by=popularity.desc&page=1`;
+                url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=pl-PL&with_genres=${genreId}&sort_by=popularity.desc&page=${page}`;
             }
         
             const response = await fetch(url);
@@ -122,11 +136,44 @@ class MovieRecommendationSystem {
         }
     }
 
-    async searchMovies(query) {
+    async searchMoviesByGenre(query, genreId, page = 1) {
+        this.currentSearchType = 'searchGenre'; 
+        this.showLoading();
+    
+        try {
+            let url = `${this.baseUrl}/search/movie?api_key=${this.apiKey}&language=pl-PL&query=${encodeURIComponent(query)}&page=${page}`;
+        
+            const response = await fetch(url);
+            const data = await response.json();
+        
+            let filteredResults = data.results;
+        
+            if (genreId !== 'all') {
+                filteredResults = data.results.filter(movie => 
+                movie.genre_ids && movie.genre_ids.includes(parseInt(genreId)));
+            }
+        
+            if (filteredResults.length === 0) {
+                this.showNoResults();
+                return;
+            }
+        
+            this.totalPages = Math.min(data.total_pages, 100);
+            this.displayMovies(filteredResults);
+            this.updatePagination();
+        } catch (error) {
+            console.error('Błąd podczas wyszukiwania:', error);
+            this.showError();
+        }
+    }
+
+    async searchMovies(query, page=1) {
+        this.currentSearchType = 'search';
+        this.currentQuery = query;
         this.showLoading();
         try {
             const response = await fetch(
-                `${this.baseUrl}/search/movie?api_key=${this.apiKey}&language=pl-PL&query=${encodeURIComponent(query)}&page=1`
+                `${this.baseUrl}/search/movie?api_key=${this.apiKey}&language=pl-PL&query=${encodeURIComponent(query)}&page=${page}`
             );
             const data = await response.json();
                     
