@@ -276,7 +276,7 @@ class MovieRecommendationSystem {
             pagination.style.display = 'none';
             return;
         }
-                
+        pagination.style.display = 'flex';        
         pageInfo.textContent = `Strona ${this.currentPage} z ${this.totalPages}`;
         prevBtn.disabled = this.currentPage === 1;
         nextBtn.disabled = this.currentPage === this.totalPages;
