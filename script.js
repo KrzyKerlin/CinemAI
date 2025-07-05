@@ -343,7 +343,7 @@ class MovieRecommendationSystem {
         return await response.json();
     }
 
-    createModal(movie) {
+    createModal(movie, credits) {
         const posterUrl = movie.poster_path 
             ? `${this.imageBaseUrl}${movie.poster_path}`
             : 'https://via.placeholder.com/500x750?text=Brak+plakatu';
@@ -351,6 +351,11 @@ class MovieRecommendationSystem {
         const releaseYear = movie.release_date 
             ? new Date(movie.release_date).getFullYear()
             : 'Nieznany';
+    
+        const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+        const stars = this.generateStars(movie.vote_average);   
+        const cast = credits.cast.slice(0, 5).map(actor => actor.name).join(', ');
+        const runtime = movie.runtime ? `${movie.runtime} min` : 'Nieznane';
     
         const modalHtml = `
             <div class="modal-overlay" id="movieModal">
@@ -361,6 +366,30 @@ class MovieRecommendationSystem {
                         <img class="modal-poster" src="${posterUrl}" alt="${movie.title}">
                         <div class="modal-info">
                             <h2 class="modal-title">${movie.title}</h2>
+                            <p class="modal-year">${releaseYear} / ${runtime}</p>
+                            <div class="modal-rating">
+                                ${stars}
+                                <span>${rating}/10</span>
+                            </div>
+                            ${movie.tagline ? `
+                                <div class="modal-quote">
+                                    <span class="quote-icon">💬</span>
+                                    <p>"${movie.tagline}"</p>
+                                </div>
+                            ` : ''}
+                            <div class="modal-section">
+                                <p>${cast || 'Brak informacji o obsadzie'}</p>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="modal-body">                   
+                        <div class="modal-section">
+                            <div class="description-container">
+                                <p class="description-text">
+                                    ${movie.overview || 'Brak opisu dostępnego.'}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

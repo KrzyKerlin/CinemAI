@@ -35,6 +35,7 @@
     --radius-md: 20px;
     --radius-lg: 25px;
     --radius-xl: 50px;
+    --radius: 50%;
             
     /* Typography */
     --font-size-xs: 0.8rem;
@@ -309,7 +310,7 @@ body {
     height: var(--spacing-2xl);
     border: 4px solid rgba(78, 205, 196, 0.3);
     border-left-color: var(--accent-primary);
-    border-radius: 50%;
+    border-radius: var(--radius);
     animation: spin 1s linear infinite;
     margin: 0 auto var(--spacing-lg);
 }
@@ -365,6 +366,7 @@ body {
     margin: 0 15px;
 }
 
+/* Modal Styles */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -375,17 +377,168 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: var(--spacing-lg);
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
     border-color: var(--accent-primary);
     transition: all 0.3s ease;
-    padding: 20px;
 }
 
 .modal-overlay.active {
     opacity: 1;
     visibility: visible;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: var(--radius-md);
+    max-width: 90vw;
+    max-height: 90vh;
+    width: 100%;
+    overflow-y: auto;
+    position: relative;
+    border-color: var(--accent-primary);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    transform: scale(0.7);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius);
+    font-size: var(--font-size-md);
+    cursor: pointer;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+}
+
+.modal-header {
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-lg);
+    background: var(--gradient-bg);
+    color: white;
+    border-radius: 16px 16px 0 0;
+}
+
+.modal-poster {
+    width: 120px;
+    height: 180px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    margin: 0 auto 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.modal-info {
+    text-align: center;
+}
+
+.modal-title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    color: var(--accent-primary);
+}
+
+.modal-year {
+    font-size: var(font-size-md);
+    opacity: 0.9;
+    margin: 0 0 15px 0;
+}
+
+.modal-rating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+.modal-rating .star {
+    font-size: var(--font-size-base);
+    color:var(--star-color);
+}
+
+.modal-rating span {
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+}
+
+.modal-quote {
+    background: rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    backdrop-filter: blur(10px);
+    margin: var(--spacing-lg);
+}
+
+.quote-icon {
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+.modal-quote p {
+    margin: 0;
+    font-style: italic;
+    font-size: var(--font-size-base);
+    line-height: 1.4;
+    color: var(--accent-primary);
+}
+
+.modal-body {
+    padding: var(--spacing-lg);
+    background: var(--gradient-bg);
+}
+
+.modal-section {
+    margin: var(--spacing-lg) auto;
+}
+
+.modal-section p {
+    color: #FFF;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.description-container {
+    position: relative;
+}
+
+.description-text {
+    transition: all 0.3s ease;
+}
+
+.movie-card {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
 }
 
 /* Responsive Design */
@@ -427,6 +580,46 @@ body {
     .movie-poster {
         height: 300px;
         object-fit: contain;
+    }
+
+     .modal-content {
+        max-width: 600px;
+    }
+    
+    .modal-header {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: var(--spacing-xl);
+    }
+    
+    .modal-poster {
+        margin: 0;
+        width: 150px;
+        height: 225px;
+    }
+    
+    .modal-info {
+        text-align: left;
+        flex: 1;
+    }
+    
+    .modal-title {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .modal-rating {
+        justify-content: flex-start;
+    }
+}
+
+@media (min-width: 1024px) {
+    .modal-content {
+        max-width: 700px;
+    }
+    
+    .modal-poster {
+        width: 180px;
+        height: 270px;
     }
 }
 
