@@ -42,8 +42,8 @@
     --font-size-base: 0.9rem;
     --font-size-md: 1rem;
     --font-size-lg: 1.1rem;
-    --font-size-xl: 1.2rem;
-    --font-size-2xl: 2.5rem;
+    --font-size-xl: 1.3rem;
+    --font-size-2xl: 2rem;
     --font-size-3xl: 3.5rem;
             
     /* Shadows */
@@ -84,7 +84,7 @@ body {
 }
 
 .header h1 {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-xl);
     font-weight: 700;
     background: var(--gradient-text);
     background-size: 400% 400%;
@@ -249,6 +249,7 @@ body {
 
 .movie-info {
     padding: var(--spacing-lg);
+    text-align: center;
 }
 
 :is(.movie-title, .movie-year, .movie-rating, .movie-overview) {
@@ -256,14 +257,20 @@ body {
 }
 
 .movie-title {
-    font-size: var(--font-size-xl);
-    font-weight: 600;
-    color: var(--text-primary);
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--accent-tertiary);
 }
 
 .movie-year {
     color: var(--text-accent);
     font-size: var(--font-size-base);
+}
+
+.movie-year {
+    font-size: var(--font-size-xs);
+    color: var(--accent-tertiary);
+    margin-bottom: var(--spacing-sm);
 }
 
 .movie-rating {
@@ -320,7 +327,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: var(--spacing-sm);
     margin: 40px 0;
     flex-wrap: wrap;
 }
@@ -358,6 +365,29 @@ body {
     margin: 0 15px;
 }
 
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    border-color: var(--accent-primary);
+    transition: all 0.3s ease;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
 /* Responsive Design */
 @media (min-width: 480px) {
     .filter-btn {
@@ -388,6 +418,10 @@ body {
     .ai-search-btn {
         font-size: var(--font-size-lg);
         padding: var(--spacing-md) var(--spacing-xl);
+    }
+
+    .movie-title {
+        font-size: var(--font-size-xl);
     }
 
     .movie-poster {

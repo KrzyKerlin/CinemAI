@@ -212,11 +212,11 @@ class MovieRecommendationSystem {
             const stars = this.generateStars(movie.vote_average);
         
             return `
-                <div class="movie-card">
+                <div class="movie-card" data-movie-id="${movie.id}">
                     <img class="movie-poster" src="${posterUrl}" alt="${movie.title}" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">${movie.title}</h3>
-                        <p class="movie-year">${releaseYear}</p>
+                        <p class="movie-year">${releaseYear} • ${this.getGenreNames(movie.genre_ids)}</p>
                         <div class="movie-rating">
                             ${stars}
                             <span>${rating}/10</span>
@@ -228,6 +228,12 @@ class MovieRecommendationSystem {
         }).join('');
 
         container.innerHTML = `<div class="movies-grid">${moviesHtml}</div>`;
+        container.querySelectorAll('.movie-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const movieId = e.currentTarget.dataset.movieId;
+                this.showMovieModal(movieId);
+            });
+        });
     }
 
     generateStars(rating) {
@@ -237,6 +243,37 @@ class MovieRecommendationSystem {
             starsHtml += `<span class="star">${i < stars ? '★' : '☆'}</span>`;
         }
         return starsHtml;
+    }
+
+    getGenreNames(genreIds) {
+        const genres = {
+            28: 'Akcja',
+            12: 'Przygoda',
+            16: 'Animacja',
+            35: 'Komedia',
+            80: 'Kryminał',
+            99: 'Dokumentalny',
+            18: 'Dramat',
+            10751: 'Familijny',
+            14: 'Fantasy',
+            36: 'Historyczny',
+            27: 'Horror',
+            10402: 'Muzyczny',
+            9648: 'Tajemnica',
+            10749: 'Romans',
+            878: 'Sci-Fi',
+            10770: 'Film TV',
+            53: 'Thriller',
+            10752: 'Wojenny',
+            37: 'Western'
+        };
+    
+        if (!genreIds || genreIds.length === 0) {
+            return 'Nieznany';
+        }
+    
+        const genreNames = genreIds.slice(0, 2).map(id => genres[id] || 'Nieznany');
+        return genreNames.join(', ');
     }
 
     showNoResults() {
@@ -280,6 +317,77 @@ class MovieRecommendationSystem {
         pageInfo.textContent = `Strona ${this.currentPage} z ${this.totalPages}`;
         prevBtn.disabled = this.currentPage === 1;
         nextBtn.disabled = this.currentPage === this.totalPages;
+    }
+
+    async showMovieModal(movieId) {
+        try {
+            const movieDetails = await this.getMovieDetails(movieId);
+            const credits = await this.getMovieCredits(movieId);
+            this.createModal(movieDetails, credits);
+        } catch (error) {
+            console.error('Błąd podczas ładowania szczegółów filmu:', error);
+        }
+    }
+
+    async getMovieDetails(movieId) {
+        const response = await fetch(
+            `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=pl-PL`
+        );
+        return await response.json();
+    }
+
+    async getMovieCredits(movieId) {
+        const response = await fetch(
+            `${this.baseUrl}/movie/${movieId}/credits?api_key=${this.apiKey}&language=pl-PL`
+        );
+        return await response.json();
+    }
+
+    createModal(movie) {
+        const posterUrl = movie.poster_path 
+            ? `${this.imageBaseUrl}${movie.poster_path}`
+            : 'https://via.placeholder.com/500x750?text=Brak+plakatu';
+    
+        const releaseYear = movie.release_date 
+            ? new Date(movie.release_date).getFullYear()
+            : 'Nieznany';
+    
+        const modalHtml = `
+            <div class="modal-overlay" id="movieModal">
+                <div class="modal-content">
+                    <button class="modal-close" id="closeModal">&times;</button>
+                
+                    <div class="modal-header">
+                        <img class="modal-poster" src="${posterUrl}" alt="${movie.title}">
+                        <div class="modal-info">
+                            <h2 class="modal-title">${movie.title}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+        document.getElementById('closeModal').addEventListener('click', this.closeModal);
+        document.getElementById('movieModal').addEventListener('click', (e) => {
+            if (e.target.id === 'movieModal') {
+                this.closeModal();
+            }
+        });
+        setTimeout(() => {
+            document.getElementById('movieModal').classList.add('active');
+        }, 10);
+    }
+
+    closeModal() {
+        const modal = document.getElementById('movieModal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
     }
 }
 
