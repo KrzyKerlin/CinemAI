@@ -191,6 +191,52 @@ class MovieRecommendationSystem {
         }
     }
 
+    parseSmartQuery(query) {
+        const words = query.toLowerCase().split(' ').filter(word => word.length > 0);
+        const parsed = {
+            actors: [],
+            genres: [],
+            years: [],
+            titles: [],
+            moods: []
+        };
+
+        const genreKeywords = {
+            'komedia': 35, 'akcja': 28, 'dramat': 18, 'horror': 27, 'thriller': 53,
+            'romans': 10749, 'scifi': 878, 'fantasy': 14, 'animacja': 16, 'kryminał': 80,
+            'przygoda': 12, 'dokumentalny': 99, 'familijny': 10751, 'historyczny': 36,
+            'muzyczny': 10402, 'tajemnica': 9648, 'wojenny': 10752, 'western': 37
+        };
+
+        const moodKeywords = {
+            'wesoły': ['komedia', 'familijny'], 'smutny': ['dramat'], 'straszny': ['horror'],
+            'romantyczny': ['romans'], 'akcyjny': ['akcja'], 'futurystyczny': ['scifi'],
+            'magiczny': ['fantasy'], 'dziecięcy': ['animacja', 'familijny']
+        };
+
+        words.forEach(word => {
+            if (/^\d{4}$/.test(word) && parseInt(word) >= 1900 && parseInt(word) <= 2025) {
+                parsed.years.push(parseInt(word));
+            }
+            else if (genreKeywords[word]) {
+                parsed.genres.push(genreKeywords[word]);
+            }
+            else if (moodKeywords[word]) {
+                moodKeywords[word].forEach(genre => {
+                    if (genreKeywords[genre]) {
+                        parsed.genres.push(genreKeywords[genre]);
+                    }
+                });
+            }
+            else {
+                parsed.actors.push(word);
+                parsed.titles.push(word);
+            }
+        });
+
+        return parsed;
+    }
+
     displayMovies(movies) {
         const container = document.getElementById('moviesContainer');
     
