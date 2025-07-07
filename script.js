@@ -237,6 +237,32 @@ class MovieRecommendationSystem {
         return parsed;
     }
 
+    async searchPersons(query) {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/search/person?api_key=${this.apiKey}&language=pl-PL&query=${encodeURIComponent(query)}`
+            );
+            const data = await response.json();
+            return data.results || [];
+        } catch (error) {
+            console.error('Błąd podczas wyszukiwania osób:', error);
+            return [];
+        }
+    }
+
+    async getMoviesByPerson(personId) {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/person/${personId}/movie_credits?api_key=${this.apiKey}&language=pl-PL`
+            );
+            const data = await response.json();
+            return data.cast || [];
+        } catch (error) {
+            console.error('Błąd podczas pobierania filmów osoby:', error);
+            return [];
+        }
+    }
+
     displayMovies(movies) {
         const container = document.getElementById('moviesContainer');
     
