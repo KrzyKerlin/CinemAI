@@ -356,6 +356,9 @@ class MovieRecommendationSystem {
         const stars = this.generateStars(movie.vote_average);   
         const cast = credits.cast.slice(0, 5).map(actor => actor.name).join(', ');
         const runtime = movie.runtime ? `${movie.runtime} min` : 'Nieznane';
+
+        const searchQuery = `${movie.title} ${releaseYear} online`;
+        const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
     
         const modalHtml = `
             <div class="modal-overlay" id="movieModal">
@@ -371,15 +374,15 @@ class MovieRecommendationSystem {
                                 ${stars}
                                 <span>${rating}/10</span>
                             </div>
+                            <div class="modal-section">
+                                <p>${cast || 'Brak informacji o obsadzie'}</p>
+                            </div>
                             ${movie.tagline ? `
                                 <div class="modal-quote">
                                     <span class="quote-icon">💬</span>
                                     <p>"${movie.tagline}"</p>
                                 </div>
                             ` : ''}
-                            <div class="modal-section">
-                                <p>${cast || 'Brak informacji o obsadzie'}</p>
-                            </div>
                         </div>
                     </div>
                 
@@ -389,6 +392,12 @@ class MovieRecommendationSystem {
                                 <p class="description-text">
                                     ${movie.overview || 'Brak opisu dostępnego.'}
                                 </p>
+                            </div>
+                            <div class="modal-search-section">
+                                <a href="${googleSearchUrl}" target="_blank" class="search-online-btn">
+                                    <span class="search-icon">🔍</span>
+                                        Szukaj online
+                                </a>
                             </div>
                         </div>
                     </div>
