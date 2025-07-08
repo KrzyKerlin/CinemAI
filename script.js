@@ -263,6 +263,53 @@ class MovieRecommendationSystem {
         }
     }
 
+    async smartSearch(query, page = 1) {
+        this.currentSearchType = 'smart';
+        this.currentQuery = query;
+        this.showLoading();
+        try {
+            const parsed = this.parseSmartQuery(query);
+            let allMovies = [];
+            let movieIds = new Set();
+        
+            // Search by actors
+            for (const actorQuery of parsed.actors) {
+                const persons = await this.searchPersons(actorQuery);
+                for (const person of persons.slice(0, 3)) {
+                    const personMovies = await this.getMoviesByPerson(person.id);
+                    personMovies.forEach(movie => {
+                        if (!movieIds.has(movie.id)) {
+                            movieIds.add(movie.id);
+                            allMovies.push(movie); 
+                        }
+                    });
+                }
+            }
+        
+            // Search by titles
+            if (parsed.titles.length > 0) {
+                const titleQuery = parsed.titles.join(' ');
+                const response = await fetch(
+                    `${this.baseUrl}/search/movie?api_key=${this.apiKey}&language=pl-PL&query=${encodeURIComponent(titleQuery)}`
+                );
+                const data = await response.json();
+            
+                data.results.forEach(movie => {
+                    if (!movieIds.has(movie.id)) {
+                        movieIds.add(movie.id);
+                        allMovies.push(movie);
+                    }
+                });
+            }
+                
+            this.displayMovies(allMovies);
+        
+        } catch (error) {
+            console.error('Błąd podczas inteligentnego wyszukiwania:', error);
+            this.showError();
+        }
+    }
+
     displayMovies(movies) {
         const container = document.getElementById('moviesContainer');
     
