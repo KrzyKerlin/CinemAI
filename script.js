@@ -35,7 +35,11 @@ class MovieRecommendationSystem {
                 if (query) {
                     this.isSearchMode = true;
                     this.currentQuery = query;
-                    this.searchMoviesByGenre(query, this.currentGenre);
+                    if (query.includes(' ') || /\d/.test(query)) {
+                        this.smartSearch(query, this.currentPage);
+                    } else {
+                        this.searchMoviesByGenre(query, this.currentGenre);
+                    }
                 } else {
                     this.isSearchMode = false;
                     this.currentQuery = '';
@@ -85,6 +89,9 @@ class MovieRecommendationSystem {
         switch (this.currentSearchType) {
             case 'search':
                 await this.searchMovies(this.currentQuery, this.currentPage);
+                break;
+            case 'smart':
+                await this.smartSearch(this.currentQuery, this.currentPage);
                 break;
             case 'searchGenre': 
                 await this.searchMoviesByGenre(this.currentQuery, this.currentGenre, this.currentPage);
