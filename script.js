@@ -287,7 +287,7 @@ class MovieRecommendationSystem {
                     personMovies.forEach(movie => {
                         if (!movieIds.has(movie.id)) {
                             movieIds.add(movie.id);
-                            allMovies.push(movie); 
+                            allMovies.push({...movie, searchScore: 3}); 
                         }
                     });
                 }
@@ -304,12 +304,55 @@ class MovieRecommendationSystem {
                 data.results.forEach(movie => {
                     if (!movieIds.has(movie.id)) {
                         movieIds.add(movie.id);
-                        allMovies.push(movie);
+                        allMovies.push({...movie, searchScore: 2});
+                    } else {
+                        // Increase score for videos found by multiple criteria
+                        const existingMovie = allMovies.find(m => m.id === movie.id);
+                        if (existingMovie) existingMovie.searchScore += 2;
                     }
                 });
             }
-                
-            this.displayMovies(allMovies);
+        
+            // Filtering by genres
+            if (parsed.genres.length > 0) {
+                allMovies = allMovies.filter(movie => {
+                    return parsed.genres.some(genre => 
+                        movie.genre_ids && movie.genre_ids.includes(genre)
+                    );
+                });
+            }
+        
+            // Filtering by years
+            if (parsed.years.length > 0) {
+                allMovies = allMovies.filter(movie => {
+                    if (!movie.release_date) return false;
+                    const movieYear = new Date(movie.release_date).getFullYear();
+                    return parsed.years.includes(movieYear);
+                });
+            }
+        
+            // Sorting by search result and popularity
+            allMovies.sort((a, b) => {
+                if (a.searchScore !== b.searchScore) {
+                    return b.searchScore - a.searchScore;
+                }
+                return b.popularity - a.popularity;
+            });
+        
+            // Fallback to regular search
+            if (allMovies.length === 0) {
+                await this.searchMovies(query, page);
+                return;
+            }
+        
+            const moviesPerPage = 20;
+            const startIndex = (page - 1) * moviesPerPage;
+            const endIndex = startIndex + moviesPerPage;
+            const paginatedMovies = allMovies.slice(startIndex, endIndex);
+            this.totalPages = Math.ceil(allMovies.length / moviesPerPage);
+        
+            this.displayMovies(paginatedMovies);
+            this.updatePagination(); 
         
         } catch (error) {
             console.error('Błąd podczas inteligentnego wyszukiwania:', error);
