@@ -63,9 +63,28 @@ class MovieRecommendationSystem {
                 this.currentPage = 1;
                 this.currentGenre = e.target.dataset.genre;
                 if (this.isSearchMode && this.currentQuery) {
-                    this.searchMoviesByGenre(this.currentQuery, this.currentGenre);
-                } else {
-                this.loadMoviesByGenre(this.currentGenre);
+                    if (this.allSearchResults && this.allSearchResults.length > 0) {
+                            let filteredResults = this.allSearchResults;
+                
+                            if (this.currentGenre !== 'all') {
+                                filteredResults = this.allSearchResults.filter(movie => 
+                                movie.genre_ids && movie.genre_ids.includes(parseInt(this.currentGenre))
+                            );
+                        }
+                
+                        if (filteredResults.length === 0) {
+                            this.showNoResults();
+                            return;
+                        }
+                
+                        this.displayMovies(filteredResults);
+                        this.totalPages = Math.ceil(filteredResults.length / 20);
+                        this.updatePagination();
+                    } else {
+                        this.searchMoviesByGenre(this.currentQuery, this.currentGenre);
+                    }
+                    } else {
+                        this.loadMoviesByGenre(this.currentGenre);
                 }
             });
         });
@@ -87,9 +106,6 @@ class MovieRecommendationSystem {
 
     async loadCurrentSearch() {
         switch (this.currentSearchType) {
-            case 'search':
-                await this.searchMovies(this.currentQuery, this.currentPage);
-                break;
             case 'smart':
                 await this.smartSearch(this.currentQuery, this.currentPage);
                 break;
@@ -152,13 +168,13 @@ class MovieRecommendationSystem {
             let url = `${this.baseUrl}/search/movie?api_key=${this.apiKey}&language=pl-PL&query=${encodeURIComponent(query)}&page=${page}`;
         
             const response = await fetch(url);
-            const data = await response.json();
-        
+            const data = await response.json();       
+            this.allSearchResults = data.results;        
             let filteredResults = data.results;
         
             if (genreId !== 'all') {
                 filteredResults = data.results.filter(movie => 
-                movie.genre_ids && movie.genre_ids.includes(parseInt(genreId)));
+              movie.genre_ids && movie.genre_ids.includes(parseInt(genreId)));
             }
         
             if (filteredResults.length === 0) {
@@ -166,31 +182,8 @@ class MovieRecommendationSystem {
                 return;
             }
         
-            this.totalPages = Math.min(data.total_pages, 100);
+            this.totalPages = Math.ceil(filteredResults.length / 20);
             this.displayMovies(filteredResults);
-            this.updatePagination();
-        } catch (error) {
-            console.error('Błąd podczas wyszukiwania:', error);
-            this.showError();
-        }
-    }
-
-    async searchMovies(query, page=1) {
-        this.currentSearchType = 'search';
-        this.currentQuery = query;
-        this.showLoading();
-        try {
-            const response = await fetch(
-                `${this.baseUrl}/search/movie?api_key=${this.apiKey}&language=pl-PL&query=${encodeURIComponent(query)}&page=${page}`
-            );
-            const data = await response.json();
-                    
-            if (data.results.length === 0) {
-                this.showNoResults();
-                return;
-            }
-            this.totalPages = Math.min(data.total_pages, 100);
-            this.displayMovies(data.results);
             this.updatePagination();
         } catch (error) {
             console.error('Błąd podczas wyszukiwania:', error);
@@ -351,6 +344,7 @@ class MovieRecommendationSystem {
             const paginatedMovies = allMovies.slice(startIndex, endIndex);
             this.totalPages = Math.ceil(allMovies.length / moviesPerPage);
         
+            this.allSearchResults = allMovies; 
             this.displayMovies(paginatedMovies);
             this.updatePagination(); 
         
@@ -366,6 +360,47 @@ class MovieRecommendationSystem {
         if (movies.length === 0) {
             this.showNoResults();
             return;
+        }
+
+        if (this.currentPage === 1) {
+            movies.sort((a, b) => {
+            // Check the title
+                if (this.currentQuery && this.isSearchMode) {
+                    const queryLower = this.currentQuery.toLowerCase();
+                    const titleA = a.title.toLowerCase();
+                    const titleB = b.title.toLowerCase();
+            
+                    // Categorize optimal
+                    const getMatchType = (title) => {
+                        if (title === queryLower) return 3; 
+                        if (title.startsWith(queryLower)) return 2; 
+                        if (title.includes(queryLower)) return 1; 
+                        return 0; 
+                    };
+            
+                    const matchA = getMatchType(titleA);
+                    const matchB = getMatchType(titleB);
+            
+                    // If different match type, sort by type
+                    if (matchA !== matchB) {
+                        return matchB - matchA;
+                    }
+            
+                    // If same match type, sort by popularity, then ratings
+                    if (matchA > 0 && matchB > 0) {
+                        if (Math.abs(b.popularity - a.popularity) > 50) {
+                            return b.popularity - a.popularity;
+                        }
+                        return b.vote_average - a.vote_average;
+                    }
+                }
+        
+                // For regular browsing or when there are no title matches
+                if (Math.abs(b.popularity - a.popularity) > 50) {
+                    return b.popularity - a.popularity;
+                }
+                return b.vote_average - a.vote_average;
+            });
         }
 
         const moviesHtml = movies.map(movie => {
