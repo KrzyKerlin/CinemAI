@@ -417,10 +417,14 @@ class MovieRecommendationSystem {
         
             return `
                 <div class="movie-card" data-movie-id="${movie.id}">
+                    ${movie.vote_average >= 8.0 ? '<div class="recommendation">TOP</div>' : ''}
                     <img class="movie-poster" src="${posterUrl}" alt="${movie.title}" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">${movie.title}</h3>
-                        <p class="movie-year">${releaseYear} • ${this.getGenreNames(movie.genre_ids)}</p>
+                        <p class="movie-year ${this.isNewMovie(movie.release_date) ? 'new-release' : ''}">
+                            ${releaseYear} ${this.isNewMovie(movie.release_date) ? '<span class="new-badge">NOWY</span>' : ''} • 
+                            <span class="genre-text ${this.isNewMovie(movie.release_date) ? 'new-genre' : ''}">${this.getGenreNames(movie.genre_ids)}</span>
+                        </p>
                         <div class="movie-rating">
                             ${stars}
                             <span>${rating}/10</span>
@@ -478,6 +482,16 @@ class MovieRecommendationSystem {
     
         const genreNames = genreIds.slice(0, 2).map(id => genres[id] || 'Nieznany');
         return genreNames.join(', ');
+    }
+
+    isNewMovie(releaseDate) {
+        if (!releaseDate) return false;   
+        const movieDate = new Date(releaseDate);
+        const currentDate = new Date();
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(currentDate.getMonth() - 6);
+    
+        return movieDate >= sixMonthsAgo && movieDate <= currentDate;
     }
 
     showNoResults() {
@@ -563,6 +577,7 @@ class MovieRecommendationSystem {
 
         const searchQuery = `${movie.title} ${releaseYear} online`;
         const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+        const filmwebUrl = `https://www.filmweb.pl/search#/all?query=${movie.title} ${releaseYear}`;
     
         const modalHtml = `
             <div class="modal-overlay" id="movieModal">
@@ -573,10 +588,13 @@ class MovieRecommendationSystem {
                         <img class="modal-poster" src="${posterUrl}" alt="${movie.title}">
                         <div class="modal-info">
                             <h2 class="modal-title">${movie.title}</h2>
-                            <p class="modal-year">${releaseYear} / ${runtime}</p>
+                            <p class="modal-year"><p class="movie-year ${this.isNewMovie(movie.release_date) ? 'new-release' : ''}">
+                            ${releaseYear} ${this.isNewMovie(movie.release_date) ? '<span class="new-badge">NOWY</span>' : ''} 
+                         / ${runtime}</p>
                             <div class="modal-rating">
                                 ${stars}
                                 <span>${rating}/10</span>
+                                ${movie.vote_average >= 8.0 ? '<div class="recommendation">TOP</div>' : ''}
                             </div>
                             <div class="modal-section">
                                 <p>${cast || 'Brak informacji o obsadzie'}</p>
@@ -600,7 +618,11 @@ class MovieRecommendationSystem {
                             <div class="modal-search-section">
                                 <a href="${googleSearchUrl}" target="_blank" class="search-online-btn">
                                     <span class="search-icon">🔍</span>
-                                        Szukaj online
+                                        Szukaj 
+                                </a>
+                                <a href="${filmwebUrl}" target="_blank" class="search-online-btn">
+                                    <span class="search-icon">🎬</span>
+                                        Filmweb     
                                 </a>
                             </div>
                         </div>
