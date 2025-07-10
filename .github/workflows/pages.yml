@@ -1,10 +1,9 @@
-# .github/workflows/pages.yml
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ] 
-  workflow_dispatch:  
+    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,11 +24,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          
       - name: Create config.js with API key
         run: |
           echo "const CONFIG = {" > config.js
