@@ -33,10 +33,12 @@ class MovieRecommendationSystem {
                 this.currentPage = 1;
                 const query = e.target.value.trim();
 
-                if (query) {
+                if (query && query.trim() !== '') {
                     this.isSearchMode = true;
                     this.currentQuery = query;
-                    if (query.includes(' ') || /\d/.test(query)) {
+                    if (this.currentGenre === 'saved') {
+                        this.loadSavedMovies();
+                    } else if (query.includes(' ') || /\d/.test(query)) {
                         this.smartSearch(query, this.currentPage);
                     } else {
                         this.searchMoviesByGenre(query, this.currentGenre);
@@ -44,45 +46,52 @@ class MovieRecommendationSystem {
                 } else {
                     this.isSearchMode = false;
                     this.currentQuery = '';
-                    this.loadMoviesByGenre(this.currentGenre);
+                    // Check genre to show all saved movies
+                    if (this.currentGenre === 'saved') {
+                        this.loadSavedMovies(); // Show all saved movies without filtering
+                    } else {
+                        this.loadMoviesByGenre(this.currentGenre);
+                    }   
                 }
             }, 500);
         });
 
-       filterButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        filterButtons.forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        this.currentPage = 1;
-        this.currentGenre = e.target.dataset.genre;
-        if (this.currentGenre === 'saved') {
-            this.loadSavedMovies();
-        } else if (this.isSearchMode && this.currentQuery) {
-            if (this.allSearchResults && this.allSearchResults.length > 0) {
-                let filteredResults = this.allSearchResults;
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                filterButtons.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.currentPage = 1;
+                this.currentGenre = e.target.dataset.genre;
+                if (this.currentGenre === 'saved') {
+                    this.loadSavedMovies();
+                }   
+                else if (this.isSearchMode && this.currentQuery) {
+                    if (this.allSearchResults && this.allSearchResults.length > 0) {
+                        let filteredResults = this.allSearchResults;
                 
-                if (this.currentGenre !== 'all') {
-                    filteredResults = this.allSearchResults.filter(movie => 
-                        movie.genre_ids && movie.genre_ids.includes(parseInt(this.currentGenre))
-                    );
+                        if (this.currentGenre !== 'all') {
+                            filteredResults = this.allSearchResults.filter(movie => 
+                            movie.genre_ids && movie.genre_ids.includes(parseInt(this.currentGenre)));
+                        }
+                
+                        if (filteredResults.length === 0) {
+                            this.showNoResults();
+                            return;
+                        }
+                
+                        this.displayMovies(filteredResults);
+                        this.totalPages = Math.ceil(filteredResults.length / 20);
+                        this.updatePagination();
+                    }  
+                    else {
+                        this.searchMoviesByGenre(this.currentQuery, this.currentGenre);
+                    }
+                } 
+                else {
+                    this.loadMoviesByGenre(this.currentGenre);
                 }
-                
-                if (filteredResults.length === 0) {
-                    this.showNoResults();
-                    return;
-                }
-                
-                this.displayMovies(filteredResults);
-                this.totalPages = Math.ceil(filteredResults.length / 20);
-                this.updatePagination();
-            } else {
-                this.searchMoviesByGenre(this.currentQuery, this.currentGenre);
-            }
-        } else {
-            this.loadMoviesByGenre(this.currentGenre);
-        }
-    });
-});
+            });
+        });
 
         prevBtn.addEventListener('click', () => {
             if (this.currentPage > 1) {
@@ -164,22 +173,30 @@ class MovieRecommendationSystem {
     
         if (this.savedMovies.length === 0) {
             this.showNoSavedMovies();
+            this.totalPages = 1;
+            this.updatePagination()
             return;
         }
     
         try {
             const movieDetails = [];
             for (const movieId of this.savedMovies) {
-                const response = await fetch(
-                    `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=pl-PL`
-                );
+                const response = await fetch(`${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=pl-PL`);
                 const movie = await response.json();
                 movieDetails.push(movie);
             }
-        
+    
             this.currentlySavedMovies = movieDetails;
-            this.totalPages = Math.ceil(movieDetails.length / 20);
-            this.displayMovies(movieDetails);
+            let filteredMovies = movieDetails;
+            if (this.isSearchMode && this.currentQuery && this.currentQuery.trim() ) {
+                const query = this.currentQuery.toLowerCase();
+                filteredMovies = movieDetails.filter(movie => 
+                (movie.title && movie.title.toLowerCase().includes(query)) ||
+                (movie.overview && movie.overview.toLowerCase().includes(query)));
+            }
+        
+            this.totalPages = Math.ceil(filteredMovies.length / 20);
+            this.displayMovies(filteredMovies);
             this.updatePagination();
         } catch (error) {
             console.error('Błąd podczas ładowania zapisanych filmów:', error);
@@ -225,7 +242,7 @@ class MovieRecommendationSystem {
             z-index: 10000;
             font-weight: bold;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    `   ;
+        `   ;
     
         document.body.appendChild(notification);
         setTimeout(() => {
@@ -239,7 +256,7 @@ class MovieRecommendationSystem {
                 <h3>Brak zapisanych filmów</h3>
                 <p>Dodaj filmy do ulubionych klikając na przycisk "Zapisz" w szczegółach filmu.</p>
             </div>
-    `   ;
+        `   ;
     }
 
     async searchMoviesByGenre(query, genreId, page = 1) {
@@ -499,7 +516,7 @@ class MovieRecommendationSystem {
         
             return `
                 <div class="movie-card" data-movie-id="${movie.id}">
-                    ${movie.vote_average >= 8.0 ? '<div class="recommendation">TOP</div>' : ''}
+                    ${movie.vote_average >= 7.9 ? '<div class="recommendation">TOP</div>' : ''}
                     <img class="movie-poster" src="${posterUrl}" alt="${movie.title}" loading="lazy">
                     <div class="movie-info">
                         <h3 class="movie-title">${movie.title}</h3>
@@ -677,7 +694,7 @@ class MovieRecommendationSystem {
                             <div class="modal-rating">
                                 ${stars}
                                 <span>${rating}/10</span>
-                                ${movie.vote_average >= 8.0 ? '<div class="recommendation">TOP</div>' : ''}
+                                ${movie.vote_average >= 7.9 ? '<div class="recommendation">TOP</div>' : ''}
                             </div>
                             <div class="modal-section">
                                 <p>${cast || 'Brak informacji o obsadzie'}</p>
@@ -709,7 +726,7 @@ class MovieRecommendationSystem {
                                 </a>
                                 <button class="save-movie-btn ${isSaved ? 'saved' : ''}" data-movie-id="${movie.id}">
                                     <span class="save-icon">${isSaved ? '❤️' : '▶️'}</span>
-                                    ${isSaved ? 'Zapisany' : 'Zapisz'}
+                                    ${isSaved ? '' : 'Zapisz'}
                                 </button>
                             </div>
                         </div>
@@ -727,17 +744,18 @@ class MovieRecommendationSystem {
             }
         });
         document.querySelector('.save-movie-btn').addEventListener('click', (e) => {
-            const movieId = parseInt(e.target.dataset.movieId);
+            const button = e.currentTarget;
+            const movieId = parseInt(button.dataset.movieId);
             const isSaved = this.isMovieSaved(movieId);
     
             if (isSaved) {
                 this.removeSavedMovie(movieId);
-                e.target.innerHTML = '<span class="save-icon">▶️</span>Zapisz';
-                e.target.classList.remove('saved');
+                button.innerHTML = '<span class="save-icon">▶️</span>Zapisz';
+                button.classList.remove('saved');
             } else {
                 this.saveMovie(movieId);
-                e.target.innerHTML = '<span class="save-icon">❤️</span>Zapisany';
-                e.target.classList.add('saved');
+                button.innerHTML = '<span class="save-icon">❤️</span>';
+                button.classList.add('saved');
             }
         });
         setTimeout(() => {
