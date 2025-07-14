@@ -24,7 +24,8 @@ class MovieRecommendationSystem {
         const searchInput = document.getElementById('searchInput');
         const filterButtons = document.querySelectorAll('.filter-btn');
         const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
+        const nextBtn = document.getElementById('nextBtn');        
+        const headerTitle = document.querySelector('h1');
 
         let searchTimeout;
         searchInput.addEventListener('input', (e) => {
@@ -106,6 +107,13 @@ class MovieRecommendationSystem {
                 this.loadCurrentSearch();
             }
         });
+
+        if (headerTitle) {
+            headerTitle.addEventListener('click', () => {
+            window.location.reload();
+            });
+            headerTitle.style.cursor = 'pointer';
+        }
     }
 
     async loadCurrentSearch() {
@@ -134,7 +142,7 @@ class MovieRecommendationSystem {
                 `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=${page}`
             );
             const data = await response.json();
-            this.totalPages = Math.min(data.total_pages, 100);
+            this.totalPages = Math.min(data.total_pages, 1000);
             this.allMovies = data.results;
             this.displayMovies(data.results);
             this.updatePagination();
@@ -157,7 +165,7 @@ class MovieRecommendationSystem {
         
             const response = await fetch(url);
             const data = await response.json();
-            this.totalPages = Math.min(data.total_pages, 100);
+            this.totalPages = Math.min(data.total_pages, 1000);
             this.allMovies = data.results;
             this.displayMovies(data.results);
             this.updatePagination();
@@ -170,33 +178,40 @@ class MovieRecommendationSystem {
     async loadSavedMovies() {
         this.currentSearchType = 'saved';
         this.showLoading();
-    
         if (this.savedMovies.length === 0) {
             this.showNoSavedMovies();
             this.totalPages = 1;
-            this.updatePagination()
+            this.updatePagination();
             return;
         }
-    
         try {
-            const movieDetails = [];
-            for (const movieId of this.savedMovies) {
-                const response = await fetch(`${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=pl-PL`);
-                const movie = await response.json();
-                movieDetails.push(movie);
+            if (!this.currentlySavedMovies || this.currentlySavedMovies.length === 0) {
+                const movieDetails = [];
+                for (const movieId of this.savedMovies) {
+                    const response = await fetch(`${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=pl-PL`);
+                    const movie = await response.json();
+                    movieDetails.push(movie);
+                }
+                this.currentlySavedMovies = movieDetails;
             }
-    
-            this.currentlySavedMovies = movieDetails;
-            let filteredMovies = movieDetails;
-            if (this.isSearchMode && this.currentQuery && this.currentQuery.trim() ) {
-                const query = this.currentQuery.toLowerCase();
-                filteredMovies = movieDetails.filter(movie => 
-                (movie.title && movie.title.toLowerCase().includes(query)) ||
-                (movie.overview && movie.overview.toLowerCase().includes(query)));
-            }
+
+            let filteredMovies = this.currentlySavedMovies;
         
-            this.totalPages = Math.ceil(filteredMovies.length / 20);
-            this.displayMovies(filteredMovies);
+            if (this.isSearchMode && this.currentQuery && this.currentQuery.trim()) {
+                const query = this.currentQuery.toLowerCase();
+                filteredMovies = this.currentlySavedMovies.filter(movie => 
+                    (movie.title && movie.title.toLowerCase().includes(query)) ||
+                    (movie.overview && movie.overview.toLowerCase().includes(query))
+                );
+            }
+
+            const moviesPerPage = 20;
+            this.totalPages = Math.ceil(filteredMovies.length / moviesPerPage);        
+            const startIndex = (this.currentPage - 1) * moviesPerPage;
+            const endIndex = startIndex + moviesPerPage;
+            const paginatedMovies = filteredMovies.slice(startIndex, endIndex);
+
+            this.displayMovies(paginatedMovies);
             this.updatePagination();
         } catch (error) {
             console.error('Błąd podczas ładowania zapisanych filmów:', error);
@@ -217,6 +232,7 @@ class MovieRecommendationSystem {
         this.savedMovies = this.savedMovies.filter(id => id !== movieId);
         localStorage.setItem('savedMovies', JSON.stringify(this.savedMovies));
         this.showNotification('Film usunięty z zapisanych!');
+        this.currentlySavedMovies = [];
 
         if (this.currentGenre === 'saved') {
             this.loadSavedMovies();
