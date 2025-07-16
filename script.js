@@ -40,6 +40,7 @@ class MovieRecommendationSystem {
         this.setupEventListeners();
         this.loadPopularMovies();
         this.toggleSearchInput(true);
+        this.scrollToTop();
     }
 
     setupEventListeners() {
@@ -250,6 +251,15 @@ class MovieRecommendationSystem {
     parseQuery(query) {
         const words = query.toLowerCase().split(' ').filter(word => word.length > 0);
         const parsed = { actors: [], genres: [], years: [], titles: [] };
+
+        if (words.length >= 2 && !words.some(word => /^\d{4}$/.test(word))) {
+            const hasGenre = words.some(word => this.genreKeywords[word]);
+        
+            if (!hasGenre) {
+                const fullName = words.join(' ');
+                parsed.actors.push(fullName);
+            }
+        }
         
         words.forEach(word => {
             if (/^\d{4}$/.test(word) && parseInt(word) >= 1900 && parseInt(word) <= 2025) {
@@ -653,7 +663,6 @@ class MovieRecommendationSystem {
             searchContainer.classList.remove('hidden');
             searchContainer.classList.add('visible');
             searchInput.disabled = false;
-            searchInput.placeholder = 'Wyszukaj filmy, aktorów, lata...';
             setTimeout(() => {
                 searchInput.style.transform = 'scale(1.02)';
                 setTimeout(() => {
@@ -749,6 +758,25 @@ class MovieRecommendationSystem {
         pageInfo.textContent = `Strona ${this.currentPage}`;
         prevBtn.disabled = this.currentPage === 1;
         nextBtn.disabled = this.currentPage === this.totalPages;
+    }
+
+    scrollToTop() {
+        const btn = document.createElement('button');
+        btn.innerHTML = '⇧';
+        btn.id = 'scrollToTopBtn';
+        btn.className = 'scroll-btn-hidden';
+        document.body.appendChild(btn);
+    
+        let visible = false;
+        window.addEventListener('scroll', () => {
+            const show = window.scrollY > 300;
+            if (show !== visible) {
+                visible = show;
+                btn.className = show ? 'scroll-btn-visible' : 'scroll-btn-hidden';
+            }
+        });
+    
+        btn.onclick = () => window.scrollTo({top: 0, behavior: 'smooth'});
     }
 }
 
