@@ -117,7 +117,11 @@ class MovieRecommendationSystem {
         const newPage = this.currentPage + direction;
         if (newPage >= 1 && newPage <= this.totalPages) {
             this.currentPage = newPage;
-            this.loadCurrentSearch();
+            await this.loadCurrentSearch();
+            const container = document.getElementById('moviesContainer');
+            window.scrollTo({
+                top: container.offsetTop - 20, behavior: 'smooth'
+            });
         }
     }
 
