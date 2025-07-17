@@ -118,11 +118,20 @@ class MovieRecommendationSystem {
         const newPage = this.currentPage + direction;
         if (newPage >= 1 && newPage <= this.totalPages) {
             this.currentPage = newPage;
+            const moviesGrid = document.querySelector('.movies-grid');
+            if (moviesGrid) {
+                moviesGrid.classList.add('no-animation');
+            }
             await this.loadCurrentSearch();
             const container = document.getElementById('moviesContainer');
             window.scrollTo({
                 top: container.offsetTop - 20, behavior: 'smooth'
             });
+            setTimeout(() => {
+                if (moviesGrid) {
+                        moviesGrid.classList.remove('no-animation');
+                }
+            }, 1000);
         }
     }
 
