@@ -131,7 +131,7 @@ class MovieRecommendationSystem {
                 if (moviesGrid) {
                         moviesGrid.classList.remove('no-animation');
                 }
-            }, 1000);
+            }, 500);
         }
     }
 
