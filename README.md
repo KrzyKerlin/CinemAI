@@ -2,6 +2,10 @@ PL
 # CinemAI
 Znajdż filmy, które Ciebie interesują. Aplikacja webowa w języku polskim do wyszukiwania i zarządzania filmami z wykorzystaniem API The Movie Database (TMDb). Zbudowana w czystym HTML, CSS i JavaScript bez zewnętrznych frameworków. 
 
+<p align="center">
+  <img src="CinemAI.png" alt="Dashboard Preview" width="800"/>
+</p>
+
 ## Inteligentne Wyszukiwanie. Funkcje i Zapisywanie Filmów
 Wyszukiwanie podstawowe i zaawansowane - np. po tytule, po aktorach itp. <br />
 Filtrowanie po gatunkach filmowych <br />
