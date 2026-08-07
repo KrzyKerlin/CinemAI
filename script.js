@@ -195,17 +195,10 @@ class MovieRecommendationSystem {
     async performSearch(query, page = 1) {
         this.currentSearchType = 'search';
         this.showLoading();
-        
+
         try {
-            let movies = [];
-            
-            // Smart search detection
-            if (query.includes(' ') || /\d/.test(query)) {
-                movies = await this.smartSearch(query);
-            } else {
-                movies = await this.basicSearch(query, page);
-            }
-            
+            let movies = await this.smartSearch(query);
+
             // Apply genre filter
             if (this.currentGenre !== 'all' && this.currentGenre !== 'saved') {
                 movies = movies.filter(movie => 
@@ -227,101 +220,117 @@ class MovieRecommendationSystem {
         }
     }
 
-    async basicSearch(query, page = 1) {
-        const response = await fetch(
-            `${this.baseUrl}/search/movie?api_key=${this.apiKey}&language=pl-PL&query=${encodeURIComponent(query)}&page=${page}`
-        );
+    async basicSearch(query, page = 1, year = null) {
+        const params = new URLSearchParams({
+            api_key: this.apiKey,
+            language: 'pl-PL',
+            query,
+            page
+        });
+        if (year) params.set('primary_release_year', year);
+
+        const response = await fetch(`${this.baseUrl}/search/movie?${params}`);
         const data = await response.json();
         return data.results || [];
     }
 
     async smartSearch(query) {
-        const parsed = this.parseQuery(query);
-        let movies = [];
+        const { titleQuery, genreId, year } = this.parseQuery(query);
         const movieIds = new Set();
-        
-        // Search by actors
-        for (const actor of parsed.actors) {
-            const persons = await this.searchPersons(actor);
-            for (const person of persons.slice(0, 3)) {
-                const personMovies = await this.getMoviesByPerson(person.id);
-                personMovies.forEach(movie => {
-                    if (!movieIds.has(movie.id)) {
-                        movieIds.add(movie.id);
-                        movies.push({...movie, searchScore: 3});
-                    }
-                });
-            }
-        }
-        
-        // Search by title
-        if (parsed.titles.length > 0) {
-            const titleMovies = await this.basicSearch(parsed.titles.join(' '));
+        let movies = [];
+
+        if (titleQuery) {
+            // Title match is always the primary signal — a movie title stays a movie
+            // title even when it happens to share a word with someone's name.
+            const titleMovies = await this.basicSearch(titleQuery, 1, year);
             titleMovies.forEach(movie => {
                 if (!movieIds.has(movie.id)) {
                     movieIds.add(movie.id);
-                    movies.push({...movie, searchScore: 2});
-                } else {
-                    const existing = movies.find(m => m.id === movie.id);
-                    if (existing) existing.searchScore += 2;
+                    movies.push({ ...movie, searchScore: this.getTitleMatchScore(movie.title, titleQuery) + 2 });
                 }
             });
+
+            // Only chase a person match when the leftover text actually looks like a
+            // name, and only for actors/directors — this replaces the old behaviour
+            // of firing a separate actor search per word, which let a single common
+            // word in a title flood the results with an unrelated filmography.
+            if (this.looksLikePersonName(titleQuery)) {
+                const persons = await this.searchPersons(titleQuery);
+                const relevant = persons
+                    .filter(p => p.known_for_department === 'Acting' || p.known_for_department === 'Directing')
+                    .slice(0, 2);
+
+                for (const person of relevant) {
+                    const personMovies = await this.getMoviesByPerson(person.id);
+                    personMovies.forEach(movie => {
+                        if (movieIds.has(movie.id)) {
+                            const existing = movies.find(m => m.id === movie.id);
+                            if (existing) existing.searchScore += 1;
+                        } else {
+                            movieIds.add(movie.id);
+                            movies.push({ ...movie, searchScore: 1 });
+                        }
+                    });
+                }
+            }
+        } else if (genreId || year) {
+            // Query was pure genre/year keywords ("komedia 2020") with nothing left
+            // to search by title — browse instead of searching.
+            movies = await this.discoverMovies(genreId, year);
         }
-        
-        // Filter by genres and years
-        return this.filterMovies(movies, parsed);
+
+        if (genreId) {
+            movies = movies.filter(movie => movie.genre_ids?.includes(genreId));
+        }
+        if (year && titleQuery) {
+            movies = movies.filter(movie => {
+                if (!movie.release_date) return false;
+                return new Date(movie.release_date).getFullYear() === year;
+            });
+        }
+
+        return movies.sort((a, b) => {
+            if (a.searchScore !== b.searchScore) return b.searchScore - a.searchScore;
+            return b.popularity - a.popularity;
+        });
+    }
+
+    looksLikePersonName(text) {
+        const words = text.trim().split(/\s+/);
+        return words.length <= 4 && /^[\p{L}\s.'-]+$/u.test(text);
     }
 
     parseQuery(query) {
-        const words = query.toLowerCase().split(' ').filter(word => word.length > 0);
-        const parsed = { actors: [], genres: [], years: [], titles: [] };
+        const words = query.trim().split(/\s+/).filter(Boolean);
+        let genreId = null;
+        let year = null;
+        const titleWords = [];
 
-        if (words.length >= 2 && !words.some(word => /^\d{4}$/.test(word))) {
-            const hasGenre = words.some(word => this.genreKeywords[word]);
-        
-            if (!hasGenre) {
-                const fullName = words.join(' ');
-                parsed.actors.push(fullName);
-            }
-        }
-        
         words.forEach(word => {
-            if (/^\d{4}$/.test(word) && parseInt(word) >= 1900 && parseInt(word) <= 2025) {
-                parsed.years.push(parseInt(word));
-            } else if (this.genreKeywords[word]) {
-                parsed.genres.push(this.genreKeywords[word]);
+            if (/^(19|20)\d{2}$/.test(word)) {
+                year = parseInt(word);
+            } else if (this.genreKeywords[word.toLowerCase()]) {
+                genreId = this.genreKeywords[word.toLowerCase()];
             } else {
-                parsed.actors.push(word);
-                parsed.titles.push(word);
+                titleWords.push(word);
             }
         });
-        
-        return parsed;
+
+        return { titleQuery: titleWords.join(' '), genreId, year };
     }
 
-    filterMovies(movies, parsed) {
-        let filtered = movies;
-        
-        if (parsed.genres.length > 0) {
-            filtered = filtered.filter(movie => 
-                parsed.genres.some(genre => movie.genre_ids?.includes(genre))
-            );
-        }
-        
-        if (parsed.years.length > 0) {
-            filtered = filtered.filter(movie => {
-                if (!movie.release_date) return false;
-                const year = new Date(movie.release_date).getFullYear();
-                return parsed.years.includes(year);
-            });
-        }
-        
-        return filtered.sort((a, b) => {
-            if (a.searchScore !== b.searchScore) {
-                return b.searchScore - a.searchScore;
-            }
-            return b.popularity - a.popularity;
+    async discoverMovies(genreId, year) {
+        const params = new URLSearchParams({
+            api_key: this.apiKey,
+            language: 'pl-PL',
+            sort_by: 'popularity.desc'
         });
+        if (genreId) params.set('with_genres', genreId);
+        if (year) params.set('primary_release_year', year);
+
+        const response = await fetch(`${this.baseUrl}/discover/movie?${params}`);
+        const data = await response.json();
+        return (data.results || []).map(movie => ({ ...movie, searchScore: 0 }));
     }
 
     paginateAndDisplay(movies, page) {
@@ -395,7 +404,9 @@ class MovieRecommendationSystem {
                 `${this.baseUrl}/person/${personId}/movie_credits?api_key=${this.apiKey}&language=pl-PL`
             );
             const data = await response.json();
-            return data.cast || [];
+            const acting = data.cast || [];
+            const directing = (data.crew || []).filter(credit => credit.job === 'Director');
+            return [...acting, ...directing];
         } catch (error) {
             console.error('Błąd podczas pobierania filmów osoby:', error);
             return [];
