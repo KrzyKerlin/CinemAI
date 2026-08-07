@@ -84,6 +84,9 @@ body {
 }
 
 .header h1 {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     font-size: var(--font-size-2xl);
     font-weight: 700;
     background: var(--gradient-text);
@@ -94,6 +97,11 @@ body {
     animation: gradientShift 4s ease-in-out infinite;
     margin-bottom: var(--spacing-sm);
     position: relative;
+}
+
+.header-icon {
+    display: inline-flex;
+    color: var(--accent-primary);
 }
 
 @keyframes gradientShift {
@@ -209,6 +217,9 @@ body {
 }
 
 .saved-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     background: var(--accent-primary);
     border: none;
     padding: var(--spacing-md) var(--spacing-xl);
@@ -249,7 +260,7 @@ body {
 }
 
 .saved-icon {
-    margin-right: 8px;
+    display: inline-flex;
 }
 
 .movies-grid {
@@ -262,7 +273,7 @@ body {
 
 .movie-card {
     background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: var (--blur);
+    backdrop-filter: var(--blur);
     border-radius: var(--radius-md);
     overflow: hidden;
     transition: all 0.4s ease;
@@ -316,14 +327,16 @@ body {
 
 .recommendation {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
     background: var(--gradient-button);
     color: var(--tertiary-dark);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xl);
-    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    box-shadow: var(--shadow-sm);
     z-index: 101;
 }
 
@@ -372,6 +385,7 @@ body {
 
 .star {
     color: var(--star-color);
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.35);
 }
 
 .movie-overview {
@@ -428,6 +442,9 @@ body {
 }
 
 .pagination button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: var(--spacing-sm) var(--spacing-md);
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: var(--radius-sm);
@@ -462,6 +479,9 @@ body {
 }
 
 #scrollToTopBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -637,7 +657,7 @@ body {
 }
 
 .modal-year {
-    font-size: var(font-size-md);
+    font-size: var(--font-size-md);
     opacity: 0.9;
     margin: 0 0 15px 0;
 }

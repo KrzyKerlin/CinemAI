@@ -1,3 +1,18 @@
+const ICONS = {
+    film: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="6" r="1.2"/><circle cx="17" cy="9" r="1.2"/><circle cx="17" cy="15" r="1.2"/><circle cx="12" cy="18" r="1.2"/><circle cx="7" cy="15" r="1.2"/><circle cx="7" cy="9" r="1.2"/></svg>',
+    bookmark: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 17 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+    bookmarkFilled: '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21 12 17 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+    search: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+    play: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><polygon points="10,9 10,15 15,12" fill="currentColor" stroke="none"/></svg>',
+    quote: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    close: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    chevronUp: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>',
+    chevronLeft: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
+    chevronRight: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+    starFilled: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><path d="M12 2 15 8.5 22 9.3 17 14 18.5 21 12 17.5 5.5 21 7 14 2 9.3 9 8.5 12 2Z"/></svg>',
+    starEmpty: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2 15 8.5 22 9.3 17 14 18.5 21 12 17.5 5.5 21 7 14 2 9.3 9 8.5 12 2Z"/></svg>'
+};
+
 class MovieRecommendationSystem {
     constructor() {
         this.apiKey = CONFIG.TMDB_API_KEY;
@@ -474,8 +489,8 @@ class MovieRecommendationSystem {
 
     generateStars(rating) {
         const stars = Math.round(rating / 2);
-        return Array.from({length: 5}, (_, i) => 
-            `<span class="star">${i < stars ? '★' : '☆'}</span>`
+        return Array.from({length: 5}, (_, i) =>
+            `<span class="star">${i < stars ? ICONS.starFilled : ICONS.starEmpty}</span>`
         ).join('');
     }
 
@@ -569,7 +584,7 @@ class MovieRecommendationSystem {
         const modalHtml = `
             <div class="modal-overlay" id="movieModal">
                 <div class="modal-content">
-                    <button class="modal-close" id="closeModal">&times;</button>
+                    <button class="modal-close" id="closeModal">${ICONS.close}</button>
                     
                     <div class="modal-header">
                         <img class="modal-poster" src="${posterUrl}" alt="${movie.title}">
@@ -588,7 +603,7 @@ class MovieRecommendationSystem {
                             </div>
                             ${movie.tagline ? `
                                 <div class="modal-quote">
-                                    <span class="quote-icon">💬</span>
+                                    <span class="quote-icon">${ICONS.quote}</span>
                                     <p>"${movie.tagline}"</p>
                                 </div>
                             ` : ''}
@@ -603,16 +618,16 @@ class MovieRecommendationSystem {
                             </div>
                             <div class="modal-search-section">
                                 <a href="${googleSearchUrl}" target="_blank" class="search-online-btn">
-                                    <span class="search-icon">🔍</span>
+                                    <span class="search-icon">${ICONS.search}</span>
                                     Szukaj
                                 </a>
                                 <a href="${filmwebUrl}" target="_blank" class="search-online-btn">
-                                    <span class="search-icon">🎬</span>
+                                    <span class="search-icon">${ICONS.play}</span>
                                     Filmweb
                                 </a>
                                 <a href="#" class="save-movie-btn ${isSaved ? 'saved' : ''}" data-movie-id="${movie.id}">
-                                    <span class="save-icon">${isSaved ? '▶️' : '💾'}</span>
-                                    ${isSaved ? '' : 'Zapisz'}
+                                    <span class="save-icon">${isSaved ? ICONS.bookmarkFilled : ICONS.bookmark}</span>
+                                    ${isSaved ? 'Zapisano' : 'Zapisz'}
                                 </a>
                             </div>
                         </div>
@@ -644,11 +659,11 @@ class MovieRecommendationSystem {
         
         if (isSaved) {
             this.removeSavedMovie(movieId);
-            button.innerHTML = '<span class="save-icon">💾</span>Zapisz';
+            button.innerHTML = `<span class="save-icon">${ICONS.bookmark}</span>Zapisz`;
             button.classList.remove('saved');
         } else {
             this.saveMovie(movieId);
-            button.innerHTML = '<span class="save-icon">▶️</span>';
+            button.innerHTML = `<span class="save-icon">${ICONS.bookmarkFilled}</span>Zapisano`;
             button.classList.add('saved');
         }
     }
@@ -771,7 +786,7 @@ class MovieRecommendationSystem {
 
     scrollToTop() {
         const btn = document.createElement('button');
-        btn.innerHTML = '⇧';
+        btn.innerHTML = ICONS.chevronUp;
         btn.id = 'scrollToTopBtn';
         btn.className = 'scroll-btn-hidden';
         document.body.appendChild(btn);
