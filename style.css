@@ -718,6 +718,40 @@ body {
     margin: 0;
 }
 
+.modal-director {
+    padding-top: var(--spacing-xs);
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+}
+
+.person-link {
+    position: relative;
+    cursor: pointer;
+    padding-bottom: 2px;
+    transition: color 0.2s ease;
+}
+
+.person-link::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 50%;
+    height: 1px;
+    background: var(--accent-primary);
+    transform: translateX(-50%) scaleX(0);
+    transform-origin: center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.person-link:hover {
+    color: var(--accent-primary);
+}
+
+.person-link:hover::after {
+    transform: translateX(-50%) scaleX(1);
+}
+
 .description-container {
     position: relative;
 }

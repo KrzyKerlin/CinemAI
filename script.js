@@ -610,7 +610,10 @@ class MovieRecommendationSystem {
             : 'Nieznany';
         
         const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
-        const cast = credits.cast.slice(0, 5).map(actor => actor.name).join(', ');
+        const cast = credits.cast.slice(0, 5)
+            .map(actor => `<span class="person-link" data-person-name="${actor.name}">${actor.name}</span>`)
+            .join(', ');
+        const director = credits.crew?.find(c => c.job === 'Director');
         const runtime = movie.runtime ? `${movie.runtime} min` : 'Nieznane';
         const isSaved = this.isMovieSaved(movie.id);
         const isNew = this.isNewMovie(movie.release_date);
@@ -638,6 +641,11 @@ class MovieRecommendationSystem {
                             </div>
                             <div class="modal-section">
                                 <p>${cast || 'Brak informacji o obsadzie'}</p>
+                                ${director ? `
+                                    <p class="modal-director">
+                                        Reżyseria: <span class="person-link" data-person-name="${director.name}">${director.name}</span>
+                                    </p>
+                                ` : ''}
                             </div>
                             ${movie.tagline ? `
                                 <div class="modal-quote">
@@ -739,6 +747,17 @@ class MovieRecommendationSystem {
                 }, 400);
             });
         }
+
+        document.querySelectorAll('.person-link').forEach(el => {
+            el.addEventListener('click', () => {
+                const personName = el.dataset.personName;
+                this.closeModal();
+                this.currentGenre = 'all';
+                this.toggleSearchInput(true);
+                document.getElementById('searchInput').value = personName;
+                this.handleSearch(personName);
+            });
+        });
 
         setTimeout(() => {
             document.getElementById('movieModal').classList.add('active');
