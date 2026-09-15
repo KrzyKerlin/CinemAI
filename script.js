@@ -10,7 +10,8 @@ const ICONS = {
     chevronLeft: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
     chevronRight: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
     starFilled: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><path d="M12 2 15 8.5 22 9.3 17 14 18.5 21 12 17.5 5.5 21 7 14 2 9.3 9 8.5 12 2Z"/></svg>',
-    starEmpty: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2 15 8.5 22 9.3 17 14 18.5 21 12 17.5 5.5 21 7 14 2 9.3 9 8.5 12 2Z"/></svg>'
+    starEmpty: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2 15 8.5 22 9.3 17 14 18.5 21 12 17.5 5.5 21 7 14 2 9.3 9 8.5 12 2Z"/></svg>',
+    playCircle: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/></svg>'
 };
 
 class MovieRecommendationSystem {
@@ -549,11 +550,12 @@ class MovieRecommendationSystem {
     // Modal functionality
     async showMovieModal(movieId) {
         try {
-            const [movieDetails, credits] = await Promise.all([
+            const [movieDetails, credits, trailerKey] = await Promise.all([
                 this.getMovieDetails(movieId),
-                this.getMovieCredits(movieId)
+                this.getMovieCredits(movieId),
+                this.getMovieTrailer(movieId)
             ]);
-            this.createModal(movieDetails, credits);
+            this.createModal(movieDetails, credits, trailerKey);
         } catch (error) {
             console.error('Błąd podczas ładowania szczegółów filmu:', error);
         }
@@ -573,7 +575,32 @@ class MovieRecommendationSystem {
         return await response.json();
     }
 
-    createModal(movie, credits) {
+    async getMovieTrailer(movieId) {
+        try {
+            let videos = await this.fetchVideos(movieId, 'pl-PL');
+            // Not every title has a Polish trailer uploaded — fall back to
+            // English rather than showing no trailer at all.
+            if (!videos.some(v => v.site === 'YouTube' && v.type === 'Trailer')) {
+                videos = await this.fetchVideos(movieId, 'en-US');
+            }
+            const trailer = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer')
+                || videos.find(v => v.site === 'YouTube');
+            return trailer ? trailer.key : null;
+        } catch (error) {
+            console.error('Błąd podczas pobierania zwiastuna:', error);
+            return null;
+        }
+    }
+
+    async fetchVideos(movieId, language) {
+        const response = await fetch(
+            `${this.baseUrl}/movie/${movieId}/videos?api_key=${this.apiKey}&language=${language}`
+        );
+        const data = await response.json();
+        return data.results || [];
+    }
+
+    createModal(movie, credits, trailerKey) {
         const posterUrl = movie.poster_path 
             ? `${this.imageBaseUrl}${movie.poster_path}`
             : 'https://via.placeholder.com/500x750?text=Brak+plakatu';
@@ -628,6 +655,12 @@ class MovieRecommendationSystem {
                                 </p>
                             </div>
                             <div class="modal-search-section">
+                                ${trailerKey ? `
+                                    <button class="search-online-btn" id="trailerBtn">
+                                        <span class="search-icon">${ICONS.playCircle}</span>
+                                        Zwiastun
+                                    </button>
+                                ` : ''}
                                 <a href="${googleSearchUrl}" target="_blank" class="search-online-btn">
                                     <span class="search-icon">${ICONS.search}</span>
                                     Szukaj
@@ -641,6 +674,22 @@ class MovieRecommendationSystem {
                                     ${isSaved ? 'Zapisano' : 'Zapisz'}
                                 </a>
                             </div>
+                            ${trailerKey ? `
+                                <div class="trailer-container" id="trailerContainer">
+                                    <div class="trailer-collapse">
+                                        <div class="trailer-frame">
+                                            <button class="trailer-close" id="trailerClose">${ICONS.close}</button>
+                                            <iframe
+                                                id="trailerIframe"
+                                                title="Zwiastun filmu"
+                                                frameborder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowfullscreen
+                                            ></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -659,7 +708,38 @@ class MovieRecommendationSystem {
             e.preventDefault();
             this.toggleSaveMovie(e.currentTarget, parseInt(e.currentTarget.dataset.movieId));
         });
-        
+
+        const trailerBtn = document.getElementById('trailerBtn');
+        if (trailerBtn) {
+            const trailerContainer = document.getElementById('trailerContainer');
+            const trailerIframe = document.getElementById('trailerIframe');
+            const trailerClose = document.getElementById('trailerClose');
+
+            trailerBtn.addEventListener('click', () => {
+                trailerIframe.src = `https://www.youtube.com/embed/${trailerKey}?autoplay=1`;
+                trailerContainer.classList.add('open');
+                trailerBtn.classList.add('faded-out');
+
+                // Scroll the trailer fully into view once it has finished
+                // expanding, so the user doesn't have to scroll manually.
+                trailerContainer.addEventListener('transitionend', function onExpand(e) {
+                    if (e.propertyName !== 'grid-template-rows') return;
+                    trailerContainer.removeEventListener('transitionend', onExpand);
+                    trailerContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
+            });
+
+            trailerClose.addEventListener('click', () => {
+                trailerContainer.classList.remove('open');
+                trailerBtn.classList.remove('faded-out');
+                // Wait for the collapse animation to finish before actually
+                // stopping playback, otherwise the video cuts off mid-shrink.
+                setTimeout(() => {
+                    trailerIframe.src = '';
+                }, 400);
+            });
+        }
+
         setTimeout(() => {
             document.getElementById('movieModal').classList.add('active');
         }, 10);

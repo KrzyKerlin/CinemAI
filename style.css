@@ -741,9 +741,11 @@ body {
     margin: var(--spacing-sm);
     padding: var(--spacing-sm) var(--spacing-lg);
     background: var(--glass-bg);
+    border: none;
     border-radius: var(--radius-lg);
     color: var(--text-primary);
     text-decoration: none;
+    font-family: inherit;
     font-size: var(--font-size-md);
     font-weight: 500;
     cursor: pointer;
@@ -762,6 +764,90 @@ body {
 :is(.save-movie-btn.saved, .save-movie-btn.saved:hover) {
     background: var(--accent-primary);
     color: var(--primary-dark);
+}
+
+.trailer-container {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.trailer-container.open {
+    grid-template-rows: 1fr;
+}
+
+.trailer-collapse {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.trailer-frame {
+    position: relative;
+    width: 100%;
+    margin-top: var(--spacing-md);
+    padding-top: 56.25%;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 0.3s ease 0.1s, transform 0.35s ease 0.1s;
+}
+
+.trailer-container.open .trailer-frame {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.trailer-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.trailer-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gradient-button);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    color: var(--primary-dark);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.trailer-close:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+#trailerBtn {
+    transition: opacity 0.25s ease, max-width 0.25s ease, margin 0.25s ease, padding 0.25s ease;
+    max-width: 160px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+#trailerBtn.faded-out {
+    opacity: 0;
+    max-width: 0;
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    pointer-events: none;
 }
 
 /* Responsive Design */
