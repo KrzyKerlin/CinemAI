@@ -100,11 +100,11 @@ class MovieRecommendationSystem {
         this.isSearchMode = !!query;
 
         if (this.currentGenre === 'saved') {
-            this.loadSavedMovies();
+            return this.loadSavedMovies();
         } else if (query) {
-            this.performSearch(query);
+            return this.performSearch(query);
         } else {
-            this.loadMoviesByGenre(this.currentGenre);
+            return this.loadMoviesByGenre(this.currentGenre);
         }
     }
 
@@ -749,13 +749,21 @@ class MovieRecommendationSystem {
         }
 
         document.querySelectorAll('.person-link').forEach(el => {
-            el.addEventListener('click', () => {
+            el.addEventListener('click', async () => {
                 const personName = el.dataset.personName;
                 this.closeModal();
                 this.currentGenre = 'all';
                 this.toggleSearchInput(true);
                 document.getElementById('searchInput').value = personName;
-                this.handleSearch(personName);
+                // Wait for the results to actually render before scrolling —
+                // the loading spinner briefly shrinks the page, so scrolling
+                // right away lands in the wrong place once results grow it
+                // back out.
+                await this.handleSearch(personName);
+                const container = document.getElementById('moviesContainer');
+                if (container) {
+                    window.scrollTo({ top: container.offsetTop - 20, behavior: 'smooth' });
+                }
             });
         });
 
