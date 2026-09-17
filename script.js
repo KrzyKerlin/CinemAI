@@ -550,11 +550,12 @@ class MovieRecommendationSystem {
     // Modal functionality
     async showMovieModal(movieId) {
         try {
-            const [movieDetails, credits, trailerKey, similarMovies] = await Promise.all([
-                this.getMovieDetails(movieId),
+            const movieDetails = await this.getMovieDetails(movieId);
+            const genreIds = (movieDetails.genres || []).map(g => g.id);
+            const [credits, trailerKey, similarMovies] = await Promise.all([
                 this.getMovieCredits(movieId),
                 this.getMovieTrailer(movieId),
-                this.getSimilarMovies(movieId)
+                this.getSimilarMovies(movieId, genreIds)
             ]);
             this.createModal(movieDetails, credits, trailerKey, similarMovies);
         } catch (error) {
@@ -562,13 +563,16 @@ class MovieRecommendationSystem {
         }
     }
 
-    async getSimilarMovies(movieId) {
+    async getSimilarMovies(movieId, genreIds = []) {
         try {
             const response = await fetch(
-                `${this.baseUrl}/movie/${movieId}/similar?api_key=${this.apiKey}&language=pl-PL`
+                `${this.baseUrl}/movie/${movieId}/recommendations?api_key=${this.apiKey}&language=pl-PL`
             );
             const data = await response.json();
-            return (data.results || []).slice(0, 3);
+            const results = data.results || [];
+
+            const sameGenre = results.filter(m => m.genre_ids?.some(id => genreIds.includes(id)));
+            return (sameGenre.length >= 3 ? sameGenre : results).slice(0, 3);
         } catch (error) {
             console.error('Błąd podczas pobierania podobnych filmów:', error);
             return [];
