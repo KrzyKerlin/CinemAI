@@ -752,6 +752,135 @@ body {
     transform: translateX(-50%) scaleX(1);
 }
 
+.similar-title {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    color: var(--accent-primary);
+}
+
+.similar-carousel {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.similar-nav {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border-hover);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.similar-nav:hover {
+    background: var(--gradient-button);
+    color: var(--primary-dark);
+    border-color: transparent;
+}
+
+.similar-grid {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    gap: var(--spacing-sm);
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+
+.similar-grid::-webkit-scrollbar {
+    display: none;
+}
+
+.similar-card {
+    flex: 0 0 100%;
+    cursor: pointer;
+    transition: transform 0.25s ease;
+}
+
+.similar-card:hover {
+    transform: translateY(-4px);
+}
+
+.similar-poster {
+    display: block;
+    width: 120px;
+    height: 180px;
+    margin: 0 auto;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    background: var(--glass-bg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.similar-card-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin-top: var(--spacing-xs);
+    text-align: center;
+}
+
+.similar-card-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    /* Reserves space for 2 lines always, so the rating below lines up at
+       the same height across cards regardless of title length. */
+    min-height: 2.6em;
+    line-height: 1.3em;
+}
+
+.similar-card-rating {
+    font-size: var(--font-size-xs);
+    color: var(--star-color);
+}
+
+@media (min-width: 30rem) {
+    .similar-card {
+        flex: 0 0 120px;
+    }
+    /* Only centers once JS confirms the cards actually fit without
+       scrolling — centering an overflowing flex row clips the start of
+       the content in a way that can't be scrolled back into view. */
+    .similar-grid.fits {
+        justify-content: center;
+    }
+}
+
+@media (min-width: 48rem) {
+    .similar-card {
+        flex: 0 0 150px;
+    }
+    .similar-poster {
+        width: 150px;
+        height: 225px;
+    }
+}
+
+@media (min-width: 64rem) {
+    .similar-card {
+        flex: 0 0 180px;
+    }
+    .similar-poster {
+        width: 180px;
+        height: 270px;
+    }
+}
+
 .description-container {
     position: relative;
 }

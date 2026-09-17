@@ -550,14 +550,28 @@ class MovieRecommendationSystem {
     // Modal functionality
     async showMovieModal(movieId) {
         try {
-            const [movieDetails, credits, trailerKey] = await Promise.all([
+            const [movieDetails, credits, trailerKey, similarMovies] = await Promise.all([
                 this.getMovieDetails(movieId),
                 this.getMovieCredits(movieId),
-                this.getMovieTrailer(movieId)
+                this.getMovieTrailer(movieId),
+                this.getSimilarMovies(movieId)
             ]);
-            this.createModal(movieDetails, credits, trailerKey);
+            this.createModal(movieDetails, credits, trailerKey, similarMovies);
         } catch (error) {
             console.error('Błąd podczas ładowania szczegółów filmu:', error);
+        }
+    }
+
+    async getSimilarMovies(movieId) {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/movie/${movieId}/similar?api_key=${this.apiKey}&language=pl-PL`
+            );
+            const data = await response.json();
+            return (data.results || []).slice(0, 3);
+        } catch (error) {
+            console.error('Błąd podczas pobierania podobnych filmów:', error);
+            return [];
         }
     }
 
@@ -600,7 +614,7 @@ class MovieRecommendationSystem {
         return data.results || [];
     }
 
-    createModal(movie, credits, trailerKey) {
+    createModal(movie, credits, trailerKey, similarMovies) {
         const posterUrl = movie.poster_path 
             ? `${this.imageBaseUrl}${movie.poster_path}`
             : 'https://via.placeholder.com/500x750?text=Brak+plakatu';
@@ -699,6 +713,31 @@ class MovieRecommendationSystem {
                                 </div>
                             ` : ''}
                         </div>
+                        ${similarMovies && similarMovies.length ? `
+                            <div class="modal-section">
+                                <h3 class="similar-title">Podobne filmy</h3>
+                                <div class="similar-carousel">
+                                    <button class="similar-nav similar-nav-prev" id="similarPrev">${ICONS.chevronLeft}</button>
+                                    <div class="similar-grid" id="similarGrid">
+                                        ${similarMovies.map(m => `
+                                            <div class="similar-card" data-movie-id="${m.id}">
+                                                <img
+                                                    class="similar-poster"
+                                                    src="${m.poster_path ? this.imageBaseUrl + m.poster_path : 'https://via.placeholder.com/200x300?text=Brak+plakatu'}"
+                                                    alt="${m.title}"
+                                                    loading="lazy"
+                                                >
+                                                <div class="similar-card-info">
+                                                    <span class="similar-card-title">${m.title}</span>
+                                                    <span class="similar-card-rating">★ ${m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <button class="similar-nav similar-nav-next" id="similarNext">${ICONS.chevronRight}</button>
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -766,6 +805,47 @@ class MovieRecommendationSystem {
                 }
             });
         });
+
+        document.querySelectorAll('.similar-card').forEach(el => {
+            el.addEventListener('click', () => {
+                const nextMovieId = parseInt(el.dataset.movieId);
+                this.closeModal();
+                setTimeout(() => this.showMovieModal(nextMovieId), 300);
+            });
+        });
+
+        const similarGrid = document.getElementById('similarGrid');
+        const similarPrev = document.getElementById('similarPrev');
+        const similarNext = document.getElementById('similarNext');
+        if (similarGrid) {
+            const step = () => (similarGrid.querySelector('.similar-card')?.offsetWidth || 110) + 10;
+            const maxScroll = () => similarGrid.scrollWidth - similarGrid.clientWidth;
+            similarPrev.addEventListener('click', () => {
+                // Loop back to the last card instead of just stopping dead
+                // at the first one.
+                if (similarGrid.scrollLeft <= 1) {
+                    similarGrid.scrollTo({ left: maxScroll(), behavior: 'smooth' });
+                } else {
+                    similarGrid.scrollBy({ left: -step(), behavior: 'smooth' });
+                }
+            });
+            similarNext.addEventListener('click', () => {
+                if (similarGrid.scrollLeft >= maxScroll() - 1) {
+                    similarGrid.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    similarGrid.scrollBy({ left: step(), behavior: 'smooth' });
+                }
+            });
+            // Only centers (and hides the now-pointless arrows) once
+            // confirmed the cards actually fit without scrolling —
+            // centering an overflowing flex row clips the start of the
+            // content in a way that can't be scrolled back into view.
+            if (similarGrid.scrollWidth <= similarGrid.clientWidth) {
+                similarGrid.classList.add('fits');
+                similarPrev.style.display = 'none';
+                similarNext.style.display = 'none';
+            }
+        }
 
         setTimeout(() => {
             document.getElementById('movieModal').classList.add('active');
