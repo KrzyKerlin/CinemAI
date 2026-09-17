@@ -74,7 +74,7 @@ body {
     width: 100%;
     max-width: clamp(320px, 90vw, 1600px);
     margin: 0 auto;
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
 }
 
 .header {
@@ -193,6 +193,10 @@ body {
 }
 
 .filter-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 8px 16px;
     border: 2px solid var(--glass-border-hover);
     border-radius: var(--radius-lg);
@@ -203,12 +207,57 @@ body {
     transition: all var(--transition-fast);
 }
 
+.filter-btn:has(.filter-icon) {
+    padding: 8px;
+}
+
+.filter-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.filter-label {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.filter-btn:has(.filter-icon) .filter-label {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%) translateY(4px);
+    background: var(--secondary-dark);
+    color: var(--text-primary);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+}
+
+.filter-btn:has(.filter-icon):hover:not(.active) .filter-label {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
 :is(.filter-btn:hover, .filter-btn.active) {
     background: var(--gradient-button);
     border-color: transparent;
     color: var(--primary-dark);
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
+}
+
+.filter-btn.active .filter-label {
+    position: static;
+    opacity: 1;
+    transform: none;
+    background: none;
+    box-shadow: none;
+    padding: 0;
+    margin-left: 6px;
 }
 
 .saved-container {
@@ -266,7 +315,7 @@ body {
 .movies-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
     margin-top: var(--spacing-2xl);
     transition: all 0.3s ease;
 }
@@ -329,6 +378,9 @@ body {
     position: absolute;
     top: var(--spacing-sm);
     right: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: 3px;
     background: var(--gradient-button);
     color: var(--tertiary-dark);
     padding: 4px 10px;
@@ -338,6 +390,16 @@ body {
     letter-spacing: 0.05em;
     box-shadow: var(--shadow-sm);
     z-index: 101;
+}
+
+.recommendation svg {
+    width: 10px;
+    height: 10px;
+}
+
+.modal-header .recommendation {
+    left: var(--spacing-sm);
+    right: auto;
 }
 
 .new-badge {
@@ -680,19 +742,23 @@ body {
 }
 
 .modal-quote {
-    background: rgba(255, 255, 255, 0.1);
-    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--glass-border);
+    padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-sm);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: var(--spacing-sm);
+    text-align: center;
+    gap: var(--spacing-xs);
     backdrop-filter: blur(10px);
     margin: var(--spacing-lg);
 }
 
 .quote-icon {
-    font-size: var(--font-size-sm);
-    flex-shrink: 0;
+    font-size: var(--font-size-lg);
+    color: var(--accent-primary);
+    opacity: 0.6;
 }
 
 .modal-quote p {
@@ -886,12 +952,14 @@ body {
 }
 
 .description-text {
+    text-align: center;
     transition: all 0.3s ease;
 }
 
 .modal-search-section {
     display: flex;
     flex-direction: column;
+    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
     margin: 20px 0;
@@ -900,9 +968,11 @@ body {
 :is(.search-online-btn, .save-movie-btn, .save-movie-btn) {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--spacing-xs);
     margin: var(--spacing-sm);
     padding: var(--spacing-sm) var(--spacing-lg);
+    min-width: 140px;
     background: var(--glass-bg);
     border: none;
     border-radius: var(--radius-lg);
@@ -914,6 +984,17 @@ body {
     cursor: pointer;
     transition: all 0.5s ease;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+:is(.search-icon, .save-icon) {
+    display: inline-flex;
+    align-items: center;
+}
+
+.search-icon img {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
 }
 
 :is(.search-online-btn:hover, .save-movie-btn:hover) {
@@ -996,7 +1077,7 @@ body {
 }
 
 #trailerBtn {
-    transition: opacity 0.25s ease, max-width 0.25s ease, margin 0.25s ease, padding 0.25s ease;
+    transition: opacity 0.25s ease, max-width 0.25s ease, min-width 0.25s ease, margin 0.25s ease, padding 0.25s ease;
     max-width: 160px;
     overflow: hidden;
     white-space: nowrap;
@@ -1005,6 +1086,7 @@ body {
 #trailerBtn.faded-out {
     opacity: 0;
     max-width: 0;
+    min-width: 0;
     margin: 0;
     padding-top: 0;
     padding-bottom: 0;
@@ -1013,11 +1095,52 @@ body {
     pointer-events: none;
 }
 
+@media (max-width: 29.99rem) {
+    .modal-search-section {
+        flex-direction: row;
+    }
+    :is(.search-online-btn, .save-movie-btn) {
+        position: relative;
+        min-width: 0;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border-radius: 50%;
+    }
+    .btn-label {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 8px);
+        transform: translateX(-50%) translateY(4px);
+        background: var(--secondary-dark);
+        color: var(--text-primary);
+        padding: 4px 10px;
+        border-radius: var(--radius-sm);
+        font-size: var(--font-size-xs);
+        box-shadow: var(--shadow-sm);
+        opacity: 0;
+        pointer-events: none;
+        white-space: nowrap;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        z-index: 10;
+    }
+    :is(.search-online-btn, .save-movie-btn):hover .btn-label {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    #trailerBtn {
+        overflow: visible;
+    }
+}
+
 /* Responsive Design */
 @media (min-width: 30rem) {
     .filter-btn {
         font-size: var(--font-size-base);
         padding: var(--spacing-sm) var(--spacing-lg);
+    }
+    .filter-btn:has(.filter-icon) {
+        padding: var(--spacing-sm);
     }
     .modal-search-section {
         flex-direction: row;

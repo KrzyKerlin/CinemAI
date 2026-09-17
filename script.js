@@ -78,8 +78,8 @@ class MovieRecommendationSystem {
         // Genre filtering
         filterButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.setActiveFilter(e.target, filterButtons);
-                this.handleGenreChange(e.target.dataset.genre);
+                this.setActiveFilter(e.currentTarget, filterButtons);
+                this.handleGenreChange(e.currentTarget.dataset.genre);
             });
         });
 
@@ -481,7 +481,7 @@ class MovieRecommendationSystem {
         
         return `
             <div class="movie-card" data-movie-id="${movie.id}">
-                ${movie.vote_average >= 7.9 ? '<div class="recommendation">TOP</div>' : ''}
+                ${movie.vote_average >= 7.9 ? `<div class="recommendation">${ICONS.starFilled}TOP</div>` : ''}
                 <img class="movie-poster" src="${posterUrl}" alt="${movie.title}" loading="lazy">
                 <div class="movie-info">
                     <h3 class="movie-title">${movie.title}</h3>
@@ -655,7 +655,7 @@ class MovieRecommendationSystem {
                             <div class="modal-rating">
                                 ${this.generateStars(movie.vote_average)}
                                 <span>${rating}/10</span>
-                                ${movie.vote_average >= 7.9 ? '<div class="recommendation">TOP</div>' : ''}
+                                ${movie.vote_average >= 7.9 ? `<div class="recommendation">${ICONS.starFilled}TOP</div>` : ''}
                             </div>
                             <div class="modal-section">
                                 <p>${cast || 'Brak informacji o obsadzie'}</p>
@@ -684,20 +684,20 @@ class MovieRecommendationSystem {
                                 ${trailerKey ? `
                                     <button class="search-online-btn" id="trailerBtn">
                                         <span class="search-icon">${ICONS.playCircle}</span>
-                                        Zwiastun
+                                        <span class="btn-label">Zwiastun</span>
                                     </button>
                                 ` : ''}
                                 <a href="${googleSearchUrl}" target="_blank" class="search-online-btn">
                                     <span class="search-icon">${ICONS.search}</span>
-                                    Szukaj
+                                    <span class="btn-label">Szukaj</span>
                                 </a>
                                 <a href="${filmwebUrl}" target="_blank" class="search-online-btn">
-                                    <span class="search-icon">${ICONS.play}</span>
-                                    Filmweb
+                                    <span class="search-icon"><img src="https://www.filmweb.pl/favicon.ico" alt=""></span>
+                                    <span class="btn-label">Filmweb</span>
                                 </a>
                                 <a href="#" class="save-movie-btn ${isSaved ? 'saved' : ''}" data-movie-id="${movie.id}">
                                     <span class="save-icon">${isSaved ? ICONS.bookmarkFilled : ICONS.bookmark}</span>
-                                    ${isSaved ? 'Zapisano' : 'Zapisz'}
+                                    <span class="btn-label">${isSaved ? 'Zapisano' : 'Zapisz'}</span>
                                 </a>
                             </div>
                             ${trailerKey ? `
@@ -861,11 +861,11 @@ class MovieRecommendationSystem {
         
         if (isSaved) {
             this.removeSavedMovie(movieId);
-            button.innerHTML = `<span class="save-icon">${ICONS.bookmark}</span>Zapisz`;
+            button.innerHTML = `<span class="save-icon">${ICONS.bookmark}</span><span class="btn-label">Zapisz</span>`;
             button.classList.remove('saved');
         } else {
             this.saveMovie(movieId);
-            button.innerHTML = `<span class="save-icon">${ICONS.bookmarkFilled}</span>Zapisano`;
+            button.innerHTML = `<span class="save-icon">${ICONS.bookmarkFilled}</span><span class="btn-label">Zapisano</span>`;
             button.classList.add('saved');
         }
     }
