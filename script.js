@@ -181,11 +181,21 @@ class MovieRecommendationSystem {
 
     async loadMoviesByGenre(genreId, page = 1) {
         this.currentSearchType = 'genre';
-        const url = genreId === 'all'
-            ? `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=${page}`
-            : genreId === 'top'
-            ? `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=pl-PL&vote_average.gte=7.9&vote_count.gte=100&sort_by=vote_average.desc&page=${page}`
-            : `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=pl-PL&with_genres=${genreId}&sort_by=popularity.desc&page=${page}`;
+
+        // Sorting the fetched page client-side only reorders those ~20 movies -
+        // asking discover for the same sort_by instead orders the whole genre,
+        // so pages actually come back in the right order too.
+        const apiSortBy = { rating: 'vote_average.desc', name: 'title.asc', year: 'primary_release_date.desc' }[this.currentSort];
+
+        let url;
+        if (genreId === 'top') {
+            url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=pl-PL&vote_average.gte=7.9&vote_count.gte=100&sort_by=${apiSortBy || 'vote_average.desc'}&page=${page}`;
+        } else if (genreId === 'all' && !apiSortBy) {
+            url = `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=${page}`;
+        } else {
+            const genreParam = genreId === 'all' ? '' : `&with_genres=${genreId}`;
+            url = `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=pl-PL${genreParam}&sort_by=${apiSortBy || 'popularity.desc'}&page=${page}`;
+        }
 
         await this.fetchAndDisplayMovies(url);
     }
@@ -985,6 +995,7 @@ class MovieRecommendationSystem {
                 <p>Spróbuj zmienić kryteria wyszukiwania lub wybierz inny gatunek.</p>
             </div>
         `;
+        document.getElementById('pagination').style.display = 'none';
     }
 
     showNoSavedMovies() {
@@ -994,6 +1005,7 @@ class MovieRecommendationSystem {
                 <p>Dodaj filmy do ulubionych klikając na przycisk "Zapisz" w szczegółach filmu.</p>
             </div>
         `;
+        document.getElementById('pagination').style.display = 'none';
     }
 
     showError() {
@@ -1003,6 +1015,7 @@ class MovieRecommendationSystem {
                 <p>Nie udało się załadować filmów. Spróbuj ponownie później.</p>
             </div>
         `;
+        document.getElementById('pagination').style.display = 'none';
     }
 
     showLoading() {
@@ -1026,7 +1039,7 @@ class MovieRecommendationSystem {
         }
         
         pagination.style.display = 'flex';
-        pageInfo.textContent = `Strona ${this.currentPage}`;
+        pageInfo.textContent = `Strona ${this.currentPage} z ${this.totalPages}`;
         prevBtn.disabled = this.currentPage === 1;
         nextBtn.disabled = this.currentPage === this.totalPages;
     }
