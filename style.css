@@ -184,6 +184,40 @@ body {
     color: var(--text-secondary);
 }
 
+.sort-container {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--spacing-md);
+}
+
+.sort-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 8px 44px 8px 16px;
+    border: 2px solid var(--glass-border-hover);
+    border-radius: var(--radius-lg);
+    background-color: var(--glass-bg);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 18px center;
+    background-size: 14px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    outline: none;
+}
+
+.sort-select:hover {
+    border-color: var(--accent-primary);
+}
+
+.sort-select option {
+    background: var(--secondary-dark);
+    color: var(--text-primary);
+}
+
 .filters {
     display: flex;
     gap: var(--spacing-sm);
@@ -819,6 +853,7 @@ body {
 }
 
 .similar-title {
+    text-align: center;
     font-size: var(--font-size-lg);
     font-weight: 700;
     margin-bottom: var(--spacing-md);

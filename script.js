@@ -27,11 +27,13 @@ class MovieRecommendationSystem {
         this.currentQuery = '';
         this.isSearchMode = false;
         this.currentSearchType = 'popular';
-        
+        this.currentSort = 'default';
+
         // Cache
         this.savedMovies = JSON.parse(localStorage.getItem('savedMovies') || '[]');
         this.savedMoviesCache = null;
         this.searchResultsCache = null;
+        this.runtimeCache = new Map();
         
         // Genre mapping
         this.genres = {
@@ -62,9 +64,16 @@ class MovieRecommendationSystem {
     setupEventListeners() {
         const searchInput = document.getElementById('searchInput');
         const filterButtons = document.querySelectorAll('.filter-btn');
+        const sortSelect = document.getElementById('sortSelect');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const headerTitle = document.querySelector('h1');
+
+        sortSelect.addEventListener('change', (e) => {
+            this.currentSort = e.target.value;
+            this.currentPage = 1;
+            this.loadCurrentSearch();
+        });
 
         // Search with debouncing
         let searchTimeout;
@@ -172,10 +181,12 @@ class MovieRecommendationSystem {
 
     async loadMoviesByGenre(genreId, page = 1) {
         this.currentSearchType = 'genre';
-        const url = genreId === 'all' 
+        const url = genreId === 'all'
             ? `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=pl-PL&page=${page}`
+            : genreId === 'top'
+            ? `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=pl-PL&vote_average.gte=7.9&vote_count.gte=100&sort_by=vote_average.desc&page=${page}`
             : `${this.baseUrl}/discover/movie?api_key=${this.apiKey}&language=pl-PL&with_genres=${genreId}&sort_by=popularity.desc&page=${page}`;
-        
+
         await this.fetchAndDisplayMovies(url);
     }
 
@@ -185,7 +196,7 @@ class MovieRecommendationSystem {
             const response = await fetch(url);
             const data = await response.json();
             this.totalPages = data.total_pages;
-            this.displayMovies(data.results);
+            this.displayMovies(await this.applySortOrder(data.results));
             this.updatePagination();
         } catch (error) {
             console.error('Błąd podczas ładowania filmów:', error);
@@ -201,8 +212,10 @@ class MovieRecommendationSystem {
             let movies = await this.smartSearch(query);
 
             // Apply genre filter
-            if (this.currentGenre !== 'all' && this.currentGenre !== 'saved') {
-                movies = movies.filter(movie => 
+            if (this.currentGenre === 'top') {
+                movies = movies.filter(movie => movie.vote_average >= 7.9);
+            } else if (this.currentGenre !== 'all' && this.currentGenre !== 'saved') {
+                movies = movies.filter(movie =>
                     movie.genre_ids?.includes(parseInt(this.currentGenre))
                 );
             }
@@ -213,7 +226,7 @@ class MovieRecommendationSystem {
             }
             
             this.searchResultsCache = movies;
-            this.paginateAndDisplay(movies, page);
+            await this.paginateAndDisplay(movies, page);
             
         } catch (error) {
             console.error('Błąd podczas wyszukiwania:', error);
@@ -334,14 +347,46 @@ class MovieRecommendationSystem {
         return (data.results || []).map(movie => ({ ...movie, searchScore: 0 }));
     }
 
-    paginateAndDisplay(movies, page) {
+    async paginateAndDisplay(movies, page) {
         const moviesPerPage = 20;
         const startIndex = (page - 1) * moviesPerPage;
         const paginatedMovies = movies.slice(startIndex, startIndex + moviesPerPage);
-        
+
         this.totalPages = Math.ceil(movies.length / moviesPerPage);
-        this.displayMovies(paginatedMovies);
+        this.displayMovies(await this.applySortOrder(paginatedMovies));
         this.updatePagination();
+    }
+
+    async applySortOrder(movies) {
+        if (this.currentSort === 'default' || !movies) return movies;
+        const sorted = [...movies];
+
+        if (this.currentSort === 'rating') {
+            sorted.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+        } else if (this.currentSort === 'name') {
+            sorted.sort((a, b) => a.title.localeCompare(b.title, 'pl'));
+        } else if (this.currentSort === 'year') {
+            sorted.sort((a, b) => (b.release_date || '').localeCompare(a.release_date || ''));
+        } else if (this.currentSort === 'length' || this.currentSort === 'length_asc') {
+            // Runtime isn't in the list endpoints, only on the full movie details -
+            // fetch it per movie and cache it so re-sorting doesn't refetch.
+            await Promise.all(sorted.map(async movie => {
+                if (movie.runtime === undefined) {
+                    if (!this.runtimeCache.has(movie.id)) {
+                        const response = await fetch(`${this.baseUrl}/movie/${movie.id}?api_key=${this.apiKey}&language=pl-PL`);
+                        const details = await response.json();
+                        this.runtimeCache.set(movie.id, details.runtime || 0);
+                    }
+                    movie.runtime = this.runtimeCache.get(movie.id);
+                }
+            }));
+            sorted.sort((a, b) => this.currentSort === 'length'
+                ? (b.runtime || 0) - (a.runtime || 0)
+                : (a.runtime || 0) - (b.runtime || 0)
+            );
+        }
+
+        return sorted;
     }
 
     async loadSavedMovies() {
@@ -378,7 +423,7 @@ class MovieRecommendationSystem {
         }
         
         this.totalPages = Math.ceil(filteredMovies.length / 20);           
-        this.paginateAndDisplay(filteredMovies, this.currentPage);
+        await this.paginateAndDisplay(filteredMovies, this.currentPage);
         
         } catch (error) {
             console.error('Błąd podczas ładowania zapisanych filmów:', error);
@@ -422,7 +467,7 @@ class MovieRecommendationSystem {
             return;
         }
         
-        if (this.currentPage === 1) {
+        if (this.currentPage === 1 && this.currentSort === 'default') {
             movies = this.sortMovies(movies);
         }
         
