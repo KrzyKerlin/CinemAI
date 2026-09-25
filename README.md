@@ -3,7 +3,8 @@ PL
 Znajdź filmy, które Ciebie interesują. Aplikacja webowa w języku polskim do wyszukiwania i zarządzania filmami z wykorzystaniem API The Movie Database (TMDb). Zbudowana w czystym HTML, CSS i JavaScript bez zewnętrznych frameworków. 
 
 <p align="center">
-  <img src="CinemAI.png" alt="Dashboard Preview" width="800"/>
+  <img src="CinemAI.png" alt="Strona główna" width="74%"/>
+  <img src="CinemAI2.png" alt="Karta filmu" width="22%"/>
 </p>
 
 ## Inteligentne Wyszukiwanie. Filtrowanie, Sortowanie i Zapisywanie Filmów
@@ -20,8 +21,8 @@ Obsada i reżyser - kliknięcie nazwiska wyszukuje pozostałe filmy tej osoby <b
 Zwiastun odtwarzany bezpośrednio w oknie filmu <br />
 Podobne filmy - karuzela propozycji dobieranych na podstawie gatunku <br />
 Linki do Filmweb i Google (do szybkiego wyszukiwania) <br />
-Oznaczenia nowych filmów <br /> 
-Rekomendacje TOP dla najlepszych filmów <br />
+Plakietka NOWY przy filmach z ostatnich 6 miesięcy <br /> 
+Plakietka TOP przy filmach z oceną 7.9 i wyżej <br />
 
 ## Prosty Interfejs Użytkownika
 Responsywny design <br />
@@ -69,8 +70,8 @@ Cast and director - clicking a name searches for that person's other movies <br 
 Trailer played right inside the movie window <br />
 Similar movies - a carousel of suggestions picked by genre <br />
 Links to Filmweb and Google (for quick searching) <br />
-New movie labels <br />
-TOP recommendations for best movies <br />
+"NEW" badge for movies released in the last 6 months <br />
+"TOP" badge for movies rated 7.9 and above <br />
 
 ## Simple User Interface
 Responsive design <br />
